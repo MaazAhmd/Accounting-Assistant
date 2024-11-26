@@ -1,0 +1,127 @@
+{% extends 'base.html' %} {% block title %}{{ _('Add Transaction') }}{% endblock
+%} {% block content %}
+<div class="container py-4 d-flex justify-content-center">
+  <div class="col-lg-6 col-md-8 col-sm-12">
+    <h1 class="text-center mb-4">{{ _('Add a transaction') }}</h1>
+    <form
+      action="{{ url_for('transactions_blueprint.add_transaction') }}"
+      method="POST"
+      enctype="multipart/form-data"
+      class="needs-validation"
+      novalidate
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Date Field -->
+      <div class="mb-3">
+        <label for="date" class="form-label"
+          ><i class="fas fa-calendar-alt"></i> {{ form.date.label }}</label
+        >
+        {{ form.date(class_='form-control', id='date') }} {% for error in
+        form.date.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Type Field -->
+      <div class="mb-3">
+        <label for="type" class="form-label"
+          ><i class="fas fa-tags"></i> {{ form.type.label }}</label
+        >
+        {{ form.type(class_='form-select', id='type') }} {% for error in
+        form.type.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Category Field -->
+      <div class="mb-3">
+        <label for="category" class="form-label"
+          ><i class="fas fa-list-alt"></i> {{ form.category.label }}</label
+        >
+        {{ form.category(class_='form-control', id='category', size=32) }} {%
+        for error in form.category.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Income Statement Category Field -->
+      <div class="mb-3">
+        <label for="income_statement_category" class="form-label"
+          ><i class="fas fa-file-invoice-dollar"></i> {{
+          form.income_statement_category.label }}</label
+        >
+        {{ form.income_statement_category(class_='form-control',
+        id='income_statement_category') }} {% for error in
+        form.income_statement_category.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Debit Field -->
+      <div class="mb-3">
+        <label for="debit" class="form-label"
+          ><i class="fas fa-arrow-down"></i> {{ form.debit.label }}</label
+        >
+        {{ form.debit(class_='form-control', id='debit') }} {% for error in
+        form.debit.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Credit Field -->
+      <div class="mb-3">
+        <label for="credit" class="form-label"
+          ><i class="fas fa-arrow-up"></i> {{ form.credit.label }}</label
+        >
+        {{ form.credit(class_='form-control', id='credit') }} {% for error in
+        form.credit.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Amount Field -->
+      <div class="mb-3">
+        <label for="amount" class="form-label"
+          ><i class="fas fa-dollar-sign"></i> {{ form.amount.label }}</label
+        >
+        {{ form.amount(class_='form-control', id='amount') }} {% for error in
+        form.amount.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Description Field -->
+      <div class="mb-3">
+        <label for="description" class="form-label"
+          ><i class="fas fa-align-left"></i> {{ form.description.label }}</label
+        >
+        {{ form.description(class_='form-control', id='description', rows=4,
+        cols=50) }} {% for error in form.description.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- File Upload -->
+      <div class="mb-3">
+        <label for="file" class="form-label"
+          ><i class="fas fa-file-upload"></i> {{ form.file.label }}</label
+        >
+        <input
+          type="file"
+          name="file"
+          accept=".csv, .xls, .xlsx, .doc, .docx"
+          class="form-control"
+          id="file"
+        />
+        {% for error in form.file.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Submit Button -->
+      <div class="text-center">{{ form.submit(class_='btn btn-primary') }}</div>
+    </form>
+  </div>
+</div>
+{% endblock %}

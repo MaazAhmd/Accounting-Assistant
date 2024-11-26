@@ -1,0 +1,4 @@
+env
+*zip
+.idea
+__pycache__

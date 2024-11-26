@@ -1,0 +1,112 @@
+<!-- income_expense_statement.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Income and Expense Statement') }}{% endblock %}
+
+{% block content %}
+<h1>{{ _('Income and Expense Statement') }}</h1>
+
+<!-- Expenses -->
+<h2>{{ _('A. Expenses (Debug Message)') }}</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>{{ _('EXPENSE ITEM') }}</th>
+            <th>{{ _('Amount (thousands BGN) Current Year') }}</th>
+            <th>{{ _('Amount (thousands BGN) Previous Year') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ _('3. Raw materials, supplies, and external services expenses') }}</td>
+            <td>{{ raw_material_expenses_current }}</td>
+            <td>{{ raw_material_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('4. Personnel expenses') }}</td>
+            <td>{{ personnel_expenses_current }}</td>
+            <td>{{ personnel_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('5. Depreciation and amortization expenses') }}</td>
+            <td>{{ depreciation_expenses_current }}</td>
+            <td>{{ depreciation_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('6. Other expenses') }}</td>
+            <td>{{ other_expenses_current }}</td>
+            <td>{{ other_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total expenses (3 + 4 + 5 + 6)') }}</td>
+            <td>{{ total_expenses_current }}</td>
+            <td>{{ total_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('8. Accounting profit (Total revenue - Total expenses)') }}</td>
+            <td>{{ accounting_profit_current }}</td>
+            <td>{{ accounting_profit_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('7. Tax expenses') }}</td>
+            <td>{{ tax_expenses_current }}</td>
+            <td>{{ tax_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('10. Net profit (8 - 7)') }}</td>
+            <td>{{ net_profit_current }}</td>
+            <td>{{ net_profit_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total (Total expenses + 7 + 10)') }}</td>
+            <td>{{ total_all_expenses_current }}</td>
+            <td>{{ total_all_expenses_previous }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Revenue -->
+<h2>{{ _('B. Revenue') }}</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>{{ _('REVENUE ITEM') }}</th>
+            <th>{{ _('Amount (thousands BGN) Current Year') }}</th>
+            <th>{{ _('Amount (thousands BGN) Previous Year') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ _('1. Net sales revenue') }}</td>
+            <td>{{ net_sales_revenue_current }}</td>
+            <td>{{ net_sales_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('2. Other revenue') }}</td>
+            <td>{{ other_revenue_current }}</td>
+            <td>{{ other_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total revenue (1 + 2)') }}</td>
+            <td>{{ total_revenue_current }}</td>
+            <td>{{ total_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('9. Accounting loss (Total revenue - Total expenses)') }}</td>
+            <td>{{ accounting_loss_current }}</td>
+            <td>{{ accounting_loss_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('11. Loss (9 + item 7 from Section A)') }}</td>
+            <td>{{ total_loss_current }}</td>
+            <td>{{ total_loss_previous }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total (Total revenue + 11)') }}</td>
+            <td>{{ total_all_revenue_current }}</td>
+            <td>{{ total_all_revenue_previous }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

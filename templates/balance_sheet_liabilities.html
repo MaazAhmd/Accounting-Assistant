@@ -1,0 +1,101 @@
+<h1>{{ _('Liabilities') }}</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>{{ _('Sections, Groups, Items') }}</th>
+            <th>{{ _('Amount (thousand BGN) Current Year') }}</th>
+            <th>{{ _('Amount (thousand BGN) Previous Year') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ _('A. Equity') }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>{{ _('I. Issued Capital') }}</td>
+            <td>{{ liabilities['A_issued_capital_current'] }}</td>
+            <td>{{ liabilities['A_issued_capital_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('II. Share Premiums') }}</td>
+            <td>{{ liabilities['A_share_premiums_current'] }}</td>
+            <td>{{ liabilities['A_share_premiums_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('III. Revaluation Reserve') }}</td>
+            <td>{{ liabilities['A_revaluation_reserve_current'] }}</td>
+            <td>{{ liabilities['A_revaluation_reserve_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('IV. Reserves') }}</td>
+            <td>{{ liabilities['A_reserves_current'] }}</td>
+            <td>{{ liabilities['A_reserves_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('V. Retained Earnings (Loss) from Previous Years') }}</td>
+            <td>{{ liabilities['A_retained_earnings_current'] }}</td>
+            <td>{{ liabilities['A_retained_earnings_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('VI. Current Profit (Loss)') }}</td>
+            <td>{{ liabilities['A_current_profit_loss_current'] }}</td>
+            <td>{{ liabilities['A_current_profit_loss_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total for Section A:') }}</td>
+            <td>{{ liabilities['A_total_equity_current'] }}</td>
+            <td>{{ liabilities['A_total_equity_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('B. Provisions and Similar Obligations') }}</td>
+            <td>{{ liabilities['B_provisions_current'] }}</td>
+            <td>{{ liabilities['B_provisions_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('C. Liabilities, including:') }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>{{ _('Up to 1 Year') }}</td>
+            <td>{{ liabilities['C_liabilities_one_year_current'] }}</td>
+            <td>{{ liabilities['C_liabilities_one_year_previous'] }}</td>
+        </tr>
+        {% for transaction in liabilities.transactions %}
+        <tr>
+            <td>{{ transaction.description }}</td>
+            <td>{{ transaction.amount_current }}</td>
+            <td>{{ transaction.amount_previous }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>{{ _('Over 1 Year') }}</td>
+            <td>{{ liabilities['C_liabilities_over_one_year_current'] }}</td>
+            <td>{{ liabilities['C_liabilities_over_one_year_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('D. Financing and Deferred Income') }}</td>
+            <td>{{ liabilities['D_deferred_income_current'] }}</td>
+            <td>{{ liabilities['D_deferred_income_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total Liabilities (A+B+C+D)') }}</td>
+            <td>{{ liabilities['total_liabilities_current'] }}</td>
+            <td>{{ liabilities['total_liabilities_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Debit Total for Liabilities') }}</td>
+            <td>{{ liabilities['liabilities_debit_total'] }}</td>
+            <td>{{ liabilities['liabilities_debit_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Credit Total for Liabilities') }}</td>
+            <td>{{ liabilities['liabilities_credit_total'] }}</td>
+            <td>{{ liabilities['liabilities_credit_previous'] }}</td>
+        </tr>
+    </tbody>
+</table>
+    

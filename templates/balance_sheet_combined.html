@@ -1,0 +1,29 @@
+<!-- balance_sheet_combined.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ _('Balance Sheet') }}</h1>
+<div>
+    <!-- Assets -->
+    <h2>{{ _('Assets') }}</h2>
+    {% include 'balance_sheet_assets.html' %}
+
+    <!-- Liabilities -->
+    <h2>{{ _('Liabilities') }}</h2>
+    {% include 'balance_sheet_liabilities.html' %}
+    <!-- Balance Summary -->
+    <h2>{{ _('Balance Summary') }}</h2>
+    <table>
+        <tr>
+            <th>Debit Total</th>
+            <td>{{ debit_total }}</td>
+        </tr>
+        <tr>
+            <th>Credit Total</th>
+            <td>{{ credit_total }}</td>
+        </tr>
+    </table>
+</div>
+{% endblock %}
+

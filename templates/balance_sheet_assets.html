@@ -1,0 +1,104 @@
+<h1>{{ _('Assets') }}</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>{{ _('SECTIONS, GROUPS, ITEMS') }}</th>
+            <th>{{ _('Amount (thousands BGN) Current Year') }}</th>
+            <th>{{ _('Amount (thousands BGN) Previous Year') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ _('A. Subscribed but Unpaid Capital') }}</td>
+            <td>{{ assets['A_asset_unpaid_capital_current'] }}</td>
+            <td>{{ assets['A_asset_unpaid_capital_previous'] }}</td>
+        </tr>
+
+<!-- 
+        {% for transaction in transactions %}
+        {% if transaction.category == 'Subscribed Capital' %}
+        <tr>
+          <td>{{ transaction.description }}</td>
+          <td>{{ transaction.amount_current }}</td>
+          <td>{{ transaction.amount_previous }}</td>
+        </tr>
+        {% endif %}
+    {% endfor %} -->
+        <tr>
+            <td>{{ _('B. Non-Current (Long-Term) Assets') }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>{{ _('I. Intangible Assets') }}</td>
+            <td>{{ assets['B_intangible_assets_current'] }}</td>
+            <td>{{ assets['B_intangible_assets_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('II. Property, Plant, and Equipment') }}</td>
+            <td>{{ assets['B_fixed_assets_current'] }}</td>
+            <td>{{ assets['B_fixed_assets_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('III. Long-Term Financial Assets') }}</td>
+            <td>{{ assets['B_long_term_financial_assets_current'] }}</td>
+            <td>{{ assets['B_long_term_financial_assets_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('IV. Deferred Taxes') }}</td>
+            <td>{{ assets['B_deferred_taxes_current'] }}</td>
+            <td>{{ assets['B_deferred_taxes_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total for Section B:') }}</td>
+            <td>{{ assets['B_total_noncurrent_assets_current'] }}</td>
+            <td>{{ assets['B_total_noncurrent_assets_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('C. Current (Short-Term) Assets') }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>{{ _('I. Inventory') }}</td>
+            <td>{{ assets['C_inventory_current'] }}</td>
+            <td>{{ assets['C_inventory_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('II. Receivables, including:') }}</td>
+            <td>{{ assets['C_receivables_current'] }}</td>
+            <td>{{ assets['C_receivables_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('over 1 year') }}</td>
+            <td>{{ assets['C_receivables_over_one_year_current'] }}</td>
+            <td>{{ assets['C_receivables_over_one_year_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('III. Investments') }}</td>
+            <td>{{ assets['C_investments_current'] }}</td>
+            <td>{{ assets['C_investments_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('IV. Cash and Cash Equivalents') }}</td>
+            <td>{{ assets['C_cash_current'] }}</td>
+            <td>{{ assets['C_cash_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total for Section C:') }}</td>
+            <td>{{ assets['C_total_current_assets_current'] }}</td>
+            <td>{{ assets['C_total_current_assets_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('D. Prepaid Expenses') }}</td>
+            <td>{{ assets['D_prepaid_expenses_current'] }}</td>
+            <td>{{ assets['D_prepaid_expenses_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('TOTAL ASSETS (A+B+C+D)') }}</td>
+            <td>{{ assets['total_assets_current'] }}</td>
+            <td>{{ assets['total_assets_previous'] }}</td>
+        </tr>
+    </tbody>
+</table>

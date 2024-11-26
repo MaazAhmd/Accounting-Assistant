@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('Financial Reports') }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="text-center mb-4"><i class="fas fa-chart-line"></i> {{ _('Financial Reports') }}</h1>
+
+    <!-- Navigation Links -->
+    <div class="d-flex justify-content-center gap-3 mb-4">
+        <a href="{{ url_for('balance_sheet') }}" class="btn btn-outline-primary">
+            <i class="fas fa-balance-scale"></i> {{ _('Balance Sheets') }}
+        </a>
+        <a href="{{ url_for('income_expense_statement') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-file-invoice-dollar"></i> {{ _('Income Expense Statement') }}
+        </a>
+    </div>
+
+
+
+
+    <!-- Export Section -->
+    <div class="text-center mb-4">
+        <h2 class="mb-3"><i class="fas fa-download"></i> {{ _('Export Income and Expense Report') }}</h2>
+        <p class="mb-4">{{ _('Please select a format to export your report:') }}</p>
+        <div class="btn-group" role="group" aria-label="Report Export Buttons">
+            <a href="{{ url_for('export_report', report_type='excel') }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> {{ _('Export as Excel') }}
+            </a>
+            <a href="{{ url_for('export_report', report_type='pdf') }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf"></i> {{ _('Export as PDF') }}
+            </a>
+            <a href="{{ url_for('export_report', report_type='word') }}" class="btn btn-info">
+                <i class="fas fa-file-word"></i> {{ _('Export as Word') }}
+            </a>
+        </div>
+    </div>
+
+    <!-- <h2>A. Expenses</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>EXPENSE NAME</th>
+            <th>Amount (thousand BGN) Current Year</th>
+            <th>Amount (thousand BGN) Previous Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>3. Expenses for raw materials, supplies, and external services</td>
+            <td>{{ raw_material_expenses_current }}</td>
+            <td>{{ raw_material_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>4. Personnel expenses</td>
+            <td>{{ personnel_expenses_current }}</td>
+            <td>{{ personnel_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>5. Depreciation and impairment expenses</td>
+            <td>{{ depreciation_expenses_current }}</td>
+            <td>{{ depreciation_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>6. Other expenses</td>
+            <td>{{ other_expenses_current }}</td>
+            <td>{{ other_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total expenses (3 + 4 + 5 + 6)</td>
+            <td>{{ total_expenses_current }}</td>
+            <td>{{ total_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>8. Accounting profit (Total revenue - total expenses)</td>
+            <td>{{ accounting_profit_current }}</td>
+            <td>{{ accounting_profit_previous }}</td>
+        </tr>
+        <tr>
+            <td>7. Tax expenses</td>
+            <td>{{ tax_expenses_current }}</td>
+            <td>{{ tax_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>10. Profit (8 - 7)</td>
+            <td>{{ net_profit_current }}</td>
+            <td>{{ net_profit_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total (Total expenses + 7 + 10)</td>
+            <td>{{ total_all_expenses_current }}</td>
+            <td>{{ total_all_expenses_previous }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>B. Revenue</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>REVENUE NAME</th>
+            <th>Amount (thousand BGN) Current Year</th>
+            <th>Amount (thousand BGN) Previous Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1. Net sales revenue</td>
+            <td>{{ net_sales_revenue_current }}</td>
+            <td>{{ net_sales_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>2. Other revenue</td>
+            <td>{{ other_revenue_current }}</td>
+            <td>{{ other_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total revenue (1 + 2)</td>
+            <td>{{ total_revenue_current }}</td>
+            <td>{{ total_revenue_previous }}</td>
+        </tr>
+        <tr>
+            <td>9. Accounting loss (Total revenue - total expenses)</td>
+            <td>{{ accounting_loss_current }}</td>
+            <td>{{ accounting_loss_previous }}</td>
+        </tr>
+        <tr>
+            <td>11. Loss (9 + line 7 from section A)</td>
+            <td>{{ total_loss_current }}</td>
+            <td>{{ total_loss_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total (Total revenue + 11)</td>
+            <td>{{ total_all_revenue_current }}</td>
+            <td>{{ total_all_revenue_previous }}</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+<h2>Balance - Assets</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>SECTIONS, GROUPS, ITEMS</th>
+            <th>Amount (thousand BGN) Current Year</th>
+            <th>Amount (thousand BGN) Previous Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>A. Subscribed but not paid-in capital</td>
+            <td>{{ asset_unpaid_capital_current }}</td>
+            <td>{{ asset_unpaid_capital_previous }}</td>
+        </tr>
+        <tr>
+            <td>B. Non-current (long-term) assets</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>I. Intangible assets</td>
+            <td>{{ intangible_assets_current }}</td>
+            <td>{{ intangible_assets_previous }}</td>
+        </tr>
+        <tr>
+            <td>II. Property, plant, and equipment</td>
+            <td>{{ fixed_assets_current }}</td>
+            <td>{{ fixed_assets_previous }}</td>
+        </tr>
+        <tr>
+            <td>III. Long-term financial assets</td>
+            <td>{{ long_term_financial_assets_current }}</td>
+            <td>{{ long_term_financial_assets_previous }}</td>
+        </tr>
+        <tr>
+            <td>IV. Deferred taxes</td>
+            <td>{{ deferred_taxes_current }}</td>
+            <td>{{ deferred_taxes_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total for Section B:</td>
+            <td>{{ total_noncurrent_assets_current }}</td>
+            <td>{{ total_noncurrent_assets_previous }}</td>
+        </tr>
+        <tr>
+            <td>C. Current (short-term) assets</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>I. Inventories</td>
+            <td>{{ inventory_current }}</td>
+            <td>{{ inventory_previous }}</td>
+        </tr>
+        <tr>
+            <td>II. Receivables, including:</td>
+            <td>{{ receivables_current }}</td>
+            <td>{{ receivables_previous }}</td>
+        </tr>
+        <tr>
+            <td>over 1 year</td>
+            <td>{{ receivables_over_one_year_current }}</td>
+            <td>{{ receivables_over_one_year_previous }}</td>
+        </tr>
+        <tr>
+            <td>III. Investments</td>
+            <td>{{ investments_current }}</td>
+            <td>{{ investments_previous }}</td>
+        </tr>
+        <tr>
+            <td>IV. Cash and cash equivalents</td>
+            <td>{{ cash_current }}</td>
+            <td>{{ cash_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total for Section C:</td>
+            <td>{{ total_current_assets_current }}</td>
+            <td>{{ total_current_assets_previous }}</td>
+        </tr>
+        <tr>
+            <td>D. Prepaid expenses</td>
+            <td>{{ prepaid_expenses_current }}</td>
+            <td>{{ prepaid_expenses_previous }}</td>
+        </tr>
+        <tr>
+            <td>TOTAL ASSETS (A+B+C+D)</td>
+            <td>{{ total_assets_current }}</td>
+            <td>{{ total_assets_previous }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Balance - Liabilities</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>SECTIONS, GROUPS, ITEMS</th>
+            <th>Amount (thousand BGN) Current Year</th>
+            <th>Amount (thousand BGN) Previous Year</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>A. Equity</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>I. Subscribed capital</td>
+            <td>{{ issued_capital_current }}</td>
+            <td>{{ issued_capital_previous }}</td>
+        </tr>
+        <tr>
+            <td>II. Share premiums</td>
+            <td>{{ share_premiums_current }}</td>
+            <td>{{ share_premiums_previous }}</td>
+        </tr>
+        <tr>
+            <td>III. Revaluation reserve</td>
+            <td>{{ revaluation_reserve_current }}</td>
+            <td>{{ revaluation_reserve_previous }}</td>
+        </tr>
+        <tr>
+            <td>IV. Reserves</td>
+            <td>{{ reserves_current }}</td>
+            <td>{{ reserves_previous }}</td>
+        </tr>
+        <tr>
+            <td>V. Retained earnings (losses) from previous years, incl.:</td>
+            <td>{{ retained_earnings_current }}</td>
+            <td>{{ retained_earnings_previous }}</td>
+        </tr>
+        <tr>
+            <td>VI. Current profit (loss)</td>
+            <td>{{ current_profit_loss_current }}</td>
+            <td>{{ current_profit_loss_previous }}</td>
+        </tr>
+        <tr>
+            <td>Total for Section A:</td>
+            <td>{{ total_equity_current }}</td>
+            <td>{{ total_equity_previous }}</td>
+        </tr>
+        <tr>
+            <td>B. Provisions and similar obligations</td>
+            <td>{{ provisions_current }}</td>
+            <td>{{ provisions_previous }}</td>
+        </tr>
+        <tr>
+            <td>C. Liabilities, including:</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Up to 1 year</td>
+            <td>{{ liabilities_one_year_current }}</td>
+            <td>{{ liabilities_one_year_previous }}</td>
+        </tr>
+        {% for transaction in liabilities %}
+        <tr>
+            <td>{{ transaction.description }}</td>
+            <td>{{ transaction.amount_current }}</td>
+            <td>{{ transaction.amount_previous }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>Over 1 year</td>
+            <td>{{ liabilities_over_one_year_current }}</td>
+            <td>{{ liabilities_over_one_year_previous }}</td>
+        </tr>
+        <tr>
+            <td>D. Deferred income and revenues for future periods</td>
+            <td>{{ deferred_income_current }}</td>
+            <td>{{ deferred_income_previous }}</td>
+        </tr>
+        <tr>
+            <td>TOTAL LIABILITIES (A+B+C+D)</td>
+            <td>{{ total_liabilities_current }}</td>
+            <td>{{ total_liabilities_previous }}</td>
+        </tr>
+    </tbody>
+</table> -->
+    <!-- Visualization Section -->
+    <div class="text-center mb-4">
+        <h3><i class="fas fa-chart-pie"></i> {{ _('Expenses by Category') }}</h3>
+        {% if chart_url %}
+            <img src="data:image/png;base64,{{ chart_url }}" alt="{{ _('Expenses by Category Chart') }}" class="img-fluid my-3">
+        {% else %}
+            <p class="text-muted">{{ _('No data available for visualization.') }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Add Category Button -->
+    <div class="text-center mb-4">
+        <form action="{{ url_for('add_category') }}" method="post">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> {{ _('Add New Category') }}
+            </button>
+        </form>
+    </div>
+
+    <!-- Monthly Revenue Comparison -->
+    <div class="mb-4">
+        <h2><i class="fas fa-calendar-alt"></i> {{ _('Monthly Revenue Comparison') }}</h2>
+        <p>{{ _('Revenue for the current month:') }} <strong>{{ income_current_month }}</strong></p>
+        <p>{{ _('Revenue for the previous month:') }} <strong>{{ income_previous_month }}</strong></p>
+    </div>
+
+    <!-- Financial Forecast -->
+    <div class="mb-4">
+        <h2><i class="fas fa-chart-bar"></i> {{ _('Financial Forecast (3 months)') }}</h2>
+        <p>{{ _('Projected profit for the next 3 months:') }} <strong>{{ projected_profit_next_three_months }}</strong></p>
+    </div>
+
+    <!-- Key Performance Indicators (KPIs) -->
+    <div class="mb-4">
+        <h2><i class="fas fa-tachometer-alt"></i> {{ _('Key Performance Indicators (KPI)') }}</h2>
+        <ul class="list-group">
+            {% for kpi, value in kpis.items() %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ kpi }}
+                    <span class="badge bg-primary rounded-pill">{{ value }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

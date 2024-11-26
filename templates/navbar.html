@@ -1,0 +1,19 @@
+<!-- navbar.html -->
+<nav>
+  <ul>
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      {% if current_user.is_authenticated %}
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+          {% if current_user.role == 'admin' %}
+              <li><a href="{{ url_for('admin_panel') }}">Admin Panel</a></li>
+              <li><a href="{{ url_for('add_user') }}">Add User</a></li>
+          {% endif %}
+      {% else %}
+          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+          <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+      {% endif %}
+      <li><a href="{{ url_for('change_language', language='bg') }}">BG</a></li>
+      <li><a href="{{ url_for('change_language', language='en') }}">EN</a></li>
+  </ul>
+</nav>

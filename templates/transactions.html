@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block content %}
+<h1>Your Transactions</h1>
+{% if transactions %}
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Debit</th>
+        <th>Credit</th>
+        <th>Description</th>
+    </tr>
+    {% for t in transactions %}
+    <tr>
+        <td>{{ t.date.strftime('%Y-%m-%d') }}</td>
+        <td>{{ 'Income' if t.type == 'income' else 'Expense' }}</td>
+        <td>{{ t.category }}</td>
+        <td>{{ t.amount }}</td>
+        <td>{{ t.debit }}</td>
+        <td>{{ t.credit }}</td>
+        <td>{{ t.description }}</td>
+        <td>
+            <form action="{{ url_for('transactions_blueprint.delete_transaction', transaction_id=t.id) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this transaction?');">Delete Transaction</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>You have no transactions recorded.</p>
+{% endif %}
+{% endblock %}
+
+<!-- <form action="{{ url_for('generate_general_ledger') }}" method="POST">
+    <button type="submit" class="btn btn-primary">Generate General Ledger</button>
+</form> -->
