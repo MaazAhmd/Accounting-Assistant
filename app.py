@@ -27,7 +27,7 @@ from utils import calculate_income_expense_data, calculate_liability_data, recal
 
 from wtforms import FileField
 from models import db, User, Account, Transaction, Category
-from forms import RegistrationForm, LoginForm, TransactionForm
+
 from auth import auth_bp
 # Initialize the app
 app = Flask(__name__)
@@ -56,6 +56,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
 
 with app.app_context():
+    db.create_all()
     seed_categories()
 
 import logging
@@ -84,6 +85,7 @@ def inject_current_year():
 
 ### Routes and Functions
 @app.route('/')
+@login_required
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -93,12 +95,14 @@ def index():
 
 
 @app.route('/change_language/<language>')
+@login_required
 def change_language(language):
     if language in app.config['BABEL_SUPPORTED_LOCALES']:
         session['language'] = language
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/get_categories/<type>', methods=['GET'])
+@login_required
 def get_categories(type):
     categories = Category.query.filter_by(type=type).all()
     return jsonify([{"id": c.id, "name": c.name} for c in categories])
@@ -282,7 +286,7 @@ def reports():
                 expense_breakdown[transaction.category] += transaction.amount
 
         # Adding new categories for expenses
-        categories = ['IT services', 'Rent of office', 'Marketing expenses', 'Office supplies']
+        categories = []
         for category in categories:
             if category not in expense_breakdown:
                 expense_breakdown[category] = 0
@@ -423,7 +427,7 @@ def export_report(report_type):
 def bad_request_error(error):
     flash('Bad request error occurred. Please check your input.', 'error')
     print("Redirecting to add_transaction for bad request.")
-    return redirect(url_for('transactions_blueprint.add_transaction'))  # Redirect to the add transaction page.
+    return redirect(url_for('transactions_blueprint.add_transaction_manual'))  # Redirect to the add transaction page.
 
 @app.errorhandler(403)
 def forbidden_error(error):

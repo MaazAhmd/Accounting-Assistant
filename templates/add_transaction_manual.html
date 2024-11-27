@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}{{ _('Add Transaction') }}{% endblock %}
+{% block title %}{{ _('Add Manual Transaction') }}{% endblock %}
 {% block content %}
 <div class="container py-4 d-flex justify-content-center">
   <div class="col-lg-6 col-md-8 col-sm-12">
-    <h1 class="text-center mb-4">{{ _('Add a transaction') }}</h1>
+    <h1 class="text-center mb-4">{{ _('Add a Manual Transaction') }}</h1>
     <form
-      action="{{ url_for('transactions_blueprint.add_transaction') }}"
+      action="{{ url_for('transactions_blueprint.add_transaction_manual') }}"
       method="POST"
-      enctype="multipart/form-data"
       class="needs-validation"
       novalidate
     >
@@ -42,74 +41,37 @@
 
       <!-- Income Statement Category Field -->
       <div class="mb-3">
-        <label for="income_statement_category" class="form-label"
-          ><i class="fas fa-file-invoice-dollar"></i> {{
-          form.income_statement_category.label }}</label
-        >
-        {{ form.income_statement_category(class_='form-control',
-        id='income_statement_category') }} {% for error in
-        form.income_statement_category.errors %}
+        <label for="income_statement_category" class="form-label">
+          {{ form.income_statement_category.label }}</label>
+        {{ form.income_statement_category(class_='form-select', id='income_statement_category') }}
+        {% for error in form.income_statement_category.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
 
-      <!-- Debit Field -->
+      <!-- Is Credit Field -->
       <div class="mb-3">
-        <label for="debit" class="form-label"
-          ><i class="fas fa-arrow-down"></i> {{ form.debit.label }}</label
-        >
-        {{ form.debit(class_='form-control', id='debit') }} {% for error in
-        form.debit.errors %}
-        <div class="text-danger">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <!-- Credit Field -->
-      <div class="mb-3">
-        <label for="credit" class="form-label"
-          ><i class="fas fa-arrow-up"></i> {{ form.credit.label }}</label
-        >
-        {{ form.credit(class_='form-control', id='credit') }} {% for error in
-        form.credit.errors %}
+        <label for="is_credit" class="form-label"><i class="fas fa-check-circle"></i> Is Credit?</label>
+        {{ form.is_credit(class_='form-check-input', id='is_credit') }}
+        {% for error in form.is_credit.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
 
       <!-- Amount Field -->
       <div class="mb-3">
-        <label for="amount" class="form-label"
-          ><i class="fas fa-dollar-sign"></i> {{ form.amount.label }}</label
-        >
-        {{ form.amount(class_='form-control', id='amount') }} {% for error in
-        form.amount.errors %}
+        <label for="amount" class="form-label"><i class="fas fa-dollar-sign"></i> {{ form.amount.label }}</label>
+        {{ form.amount(class_='form-control', id='amount') }}
+        {% for error in form.amount.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
 
       <!-- Description Field -->
       <div class="mb-3">
-        <label for="description" class="form-label"
-          ><i class="fas fa-align-left"></i> {{ form.description.label }}</label
-        >
-        {{ form.description(class_='form-control', id='description', rows=4,
-        cols=50) }} {% for error in form.description.errors %}
-        <div class="text-danger">{{ error }}</div>
-        {% endfor %}
-      </div>
-
-      <!-- File Upload -->
-      <div class="mb-3">
-        <label for="file" class="form-label"
-          ><i class="fas fa-file-upload"></i> {{ form.file.label }}</label
-        >
-        <input
-          type="file"
-          name="file"
-          accept=".csv, .xls, .xlsx, .doc, .docx"
-          class="form-control"
-          id="file"
-        />
-        {% for error in form.file.errors %}
+        <label for="description" class="form-label"><i class="fas fa-align-left"></i> {{ form.description.label }}</label>
+        {{ form.description(class_='form-control', id='description') }}
+        {% for error in form.description.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
@@ -120,7 +82,6 @@
   </div>
 </div>
 
-
 <script>
   document.getElementById("type").addEventListener("change", function () {
     const type = this.value;
@@ -128,20 +89,18 @@
     categorySelect.innerHTML = ""; // Clear previous options
 
     fetch(`/get_categories/${type}`)
-      .then((response) => response.json())
-      .then((categories) => {
-        categories.forEach((category) => {
+      .then(response => response.json())
+      .then(categories => {
+        categories.forEach(category => {
           const option = document.createElement("option");
           option.value = category.name;
           option.textContent = category.name;
           categorySelect.appendChild(option);
         });
       })
-      .catch((error) => console.error("Error fetching categories:", error));
+      .catch(error => console.error("Error fetching categories:", error));
   });
 
-  // Trigger the change event on load to populate the initial categories
   document.getElementById("type").dispatchEvent(new Event("change"));
 </script>
-
 {% endblock %}

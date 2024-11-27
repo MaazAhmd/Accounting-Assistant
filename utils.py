@@ -69,17 +69,17 @@ def recalculate_totals():
     liabilities_credit_total = 0.0
 
     for transaction in transactions:
-        if transaction.debit:
-            if transaction.category in ['Assets']:
-                asset_debit_total += transaction.debit
-            elif transaction.category in ['Liabilities']:
-                liabilities_debit_total += transaction.debit
+        if not transaction.is_credit:
+            if transaction.type =='income':
+                asset_debit_total += transaction.amount
+            elif transaction.type=='expense':
+                liabilities_debit_total += transaction.amount
 
-        if transaction.credit:
-            if transaction.category in ['Assets']:
-                asset_credit_total += transaction.credit
-            elif transaction.category in ['Liabilities']:
-                liabilities_credit_total += transaction.credit
+        if transaction.is_credit:
+            if transaction.type == 'income':
+                asset_credit_total += transaction.amount
+            elif transaction.type =='expense':
+                liabilities_credit_total += transaction.amount
 
     # Записване на стойностите в базата данни
     current_user.asset_debit_total = asset_debit_total

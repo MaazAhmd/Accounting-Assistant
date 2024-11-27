@@ -11,18 +11,19 @@
         <th>Type</th>
         <th>Category</th>
         <th>Amount</th>
-        <th>Debit</th>
-        <th>Credit</th>
+
         <th>Description</th>
+        <th>Action</th>
     </tr>
     {% for t in transactions %}
     <tr>
         <td>{{ t.date.strftime('%Y-%m-%d') }}</td>
         <td>{{ 'Income' if t.type == 'income' else 'Expense' }}</td>
         <td>{{ t.category }}</td>
-        <td>{{ t.amount }}</td>
-        <td>{{ t.debit }}</td>
-        <td>{{ t.credit }}</td>
+        <td>{{ t.amount }}
+            <span class="badge bg-{{ 'success' if t.is_credit else 'danger' }}">
+                {{ 'Credit' if t.is_credit else 'Debit' }}
+            </span></td>
         <td>{{ t.description }}</td>
         <td>
             <form action="{{ url_for('transactions_blueprint.delete_transaction', transaction_id=t.id) }}" method="POST" style="display:inline;">

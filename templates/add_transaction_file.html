@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ _('Upload Transaction File') }}{% endblock %}
+{% block content %}
+<div class="container py-4 d-flex justify-content-center">
+  <div class="col-lg-6 col-md-8 col-sm-12">
+    <h1 class="text-center mb-4">{{ _('Upload a Transaction File') }}</h1>
+    <form
+      action="{{ url_for('transactions_blueprint.add_transaction_file') }}"
+      method="POST"
+      enctype="multipart/form-data"
+      class="needs-validation"
+      novalidate
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- File Upload -->
+      <div class="mb-3">
+        <label for="file" class="form-label"><i class="fas fa-file-upload"></i> {{ form.file.label }}</label>
+        {{ form.file(class_='form-control', id='file') }}
+        {% for error in form.file.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Submit Button -->
+      <div class="text-center">{{ form.submit(class_='btn btn-primary') }}</div>
+    </form>
+  </div>
+</div>
+{% endblock %}

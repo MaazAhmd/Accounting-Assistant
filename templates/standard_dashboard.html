@@ -17,13 +17,13 @@ content %}
       <div class="card shadow-sm h-100">
         <div class="card-body text-center">
           <h5 class="card-title fw-bold">
-            <i class="fas fa-plus-circle"></i> Add Transaction
+            <i class="fas fa-plus-circle"></i> Add Transaction Manually
           </h5>
           <p class="card-text">
             Log a new transaction to keep track of your finances.
           </p>
           <a
-            href="{{ url_for('transactions_blueprint.add_transaction') }}"
+            href="{{ url_for('transactions_blueprint.add_transaction_manual') }}"
             class="btn btn-primary btn-sm"
           >
             <i class="fas fa-arrow-right"></i> Go
@@ -31,6 +31,27 @@ content %}
         </div>
       </div>
     </div>
+
+    <!-- Upload Transaction File -->
+<div class="col-md-4">
+  <div class="card shadow-sm h-100">
+    <div class="card-body text-center">
+      <h5 class="card-title fw-bold">
+        <i class="fas fa-file-upload"></i> Upload Transaction File
+      </h5>
+      <p class="card-text">
+        Upload a file to quickly add multiple transactions at once.
+      </p>
+      <a
+        href="{{ url_for('transactions_blueprint.add_transaction_file') }}"
+        class="btn btn-primary btn-sm"
+      >
+        <i class="fas fa-arrow-right"></i> Upload
+      </a>
+    </div>
+  </div>
+</div>
+
     <!-- View Transactions -->
     <div class="col-md-4">
       <div class="card shadow-sm h-100">

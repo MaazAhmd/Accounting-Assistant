@@ -44,8 +44,8 @@ class Transaction(db.Model):
     description = db.Column(db.String(200), nullable=True)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    debit = db.Column(db.Float, nullable=True)  # Ново поле за дебит
-    credit = db.Column(db.Float, nullable=True)  # Ново поле за кредит
+    is_credit = db.Column(db.Boolean, nullable=True, default=False)  # True for credit, False for debit
+
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)

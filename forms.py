@@ -1,6 +1,6 @@
 # Import Flask-WTF and WTForms
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, FloatField, DateField, TextAreaField
+from wtforms import BooleanField, StringField, PasswordField, SubmitField, SelectField, FloatField, DateField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, NumberRange, Regexp
 from wtforms import FileField
 from models import User
@@ -35,24 +35,28 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
-class TransactionForm(FlaskForm):
+class ManualTransactionForm(FlaskForm):
     date = DateField('Date', validators=[DataRequired()], format='%Y-%m-%d')
     type = SelectField('Type', choices=[('income', 'Income'), ('expense', 'Expense')], validators=[DataRequired()])
     category = StringField('Category', validators=[DataRequired()])
-    income_statement_category = SelectField('Income Statement Category', choices=[
-        ('Raw materials, supplies, and external services expenses', 'Raw materials, supplies, and external services expenses'),
-        ('Personnel expenses', 'Personnel expenses'),
-        ('Depreciation and amortization expenses', 'Depreciation and amortization expenses'),
-        ('Other expenses', 'Other expenses'),
-        ('Tax expenses', 'Tax expenses'),
-        ('Net sales revenue', 'Net sales revenue'),
-        ('Other revenue', 'Other revenue'),
-    ])
-    debit = FloatField('Debit')  # Ново поле за дебит
-    credit = FloatField('Credit')  # Ново поле за кредит
+    income_statement_category = SelectField(
+        'Income Statement Category',
+        choices=[
+            ('Raw materials, supplies, and external services expenses', 'Raw materials, supplies, and external services expenses'),
+            ('Personnel expenses', 'Personnel expenses'),
+            ('Depreciation and amortization expenses', 'Depreciation and amortization expenses'),
+            ('Other expenses', 'Other expenses'),
+            ('Tax expenses', 'Tax expenses'),
+            ('Net sales revenue', 'Net sales revenue'),
+            ('Other revenue', 'Other revenue'),
+        ]
+    )
+    is_credit = BooleanField('Is Credit?')
     amount = FloatField('Amount', validators=[DataRequired(), NumberRange(min=0)])
-    description = TextAreaField('Description')
-    file = FileField('Upload File')  # Added a file field
+    description = TextAreaField('Description', validators=[DataRequired()])
     submit = SubmitField('Add Transaction')
 
 
+class FileUploadForm(FlaskForm):
+    file = FileField('Upload File', validators=[DataRequired()])
+    submit = SubmitField('Process File')
