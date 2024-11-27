@@ -4,8 +4,14 @@ from wrapper_functions import roles_required
 from forms import TransactionForm
 from models import db, Transaction
 from utils import recalculate_totals, автоматично_дефинирана_категория
+import logging
 
 transaction = Blueprint('transactions_blueprint', 'transaction')
+
+
+# Configuring logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 @transaction.route('/add_transaction', methods=['GET', 'POST'])
 @login_required

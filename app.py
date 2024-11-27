@@ -1,6 +1,6 @@
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request, flash, redirect, url_for, flash, session, abort, send_file
+from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, flash, session, abort, send_file
 from flask_sqlalchemy import SQLAlchemy
 # from flask_mail import Mail, Message  # Commented out as emails are not used
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -23,7 +23,7 @@ import re
 from docx import Document
 import base64
 
-from utils import calculate_income_expense_data, calculate_liability_data, recalculate_totals,export_to_excel,export_to_word,export_to_pdf,автоматично_дефинирана_категория,calculate_asset_data
+from utils import calculate_income_expense_data, calculate_liability_data, recalculate_totals,export_to_excel,export_to_word,export_to_pdf, seed_categories,автоматично_дефинирана_категория,calculate_asset_data
 
 from wtforms import FileField
 from models import db, User, Account, Transaction, Category
@@ -55,6 +55,8 @@ migrate = Migrate(app, db)  # Add this line for migration initialization
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
 
+with app.app_context():
+    seed_categories()
 
 import logging
 
@@ -95,6 +97,11 @@ def change_language(language):
     if language in app.config['BABEL_SUPPORTED_LOCALES']:
         session['language'] = language
     return redirect(request.referrer or url_for('index'))
+
+@app.route('/get_categories/<type>', methods=['GET'])
+def get_categories(type):
+    categories = Category.query.filter_by(type=type).all()
+    return jsonify([{"id": c.id, "name": c.name} for c in categories])
 
 
 @app.route('/dashboard')

@@ -1,5 +1,6 @@
-{% extends 'base.html' %} {% block title %}{{ _('Add Transaction') }}{% endblock
-%} {% block content %}
+{% extends 'base.html' %}
+{% block title %}{{ _('Add Transaction') }}{% endblock %}
+{% block content %}
 <div class="container py-4 d-flex justify-content-center">
   <div class="col-lg-6 col-md-8 col-sm-12">
     <h1 class="text-center mb-4">{{ _('Add a transaction') }}</h1>
@@ -14,33 +15,27 @@
 
       <!-- Date Field -->
       <div class="mb-3">
-        <label for="date" class="form-label"
-          ><i class="fas fa-calendar-alt"></i> {{ form.date.label }}</label
-        >
-        {{ form.date(class_='form-control', id='date') }} {% for error in
-        form.date.errors %}
+        <label for="date" class="form-label">{{ form.date.label }}</label>
+        {{ form.date(class_='form-control', id='date') }}
+        {% for error in form.date.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
 
       <!-- Type Field -->
       <div class="mb-3">
-        <label for="type" class="form-label"
-          ><i class="fas fa-tags"></i> {{ form.type.label }}</label
-        >
-        {{ form.type(class_='form-select', id='type') }} {% for error in
-        form.type.errors %}
+        <label for="type" class="form-label">{{ form.type.label }}</label>
+        {{ form.type(class_='form-select', id='type') }}
+        {% for error in form.type.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
 
       <!-- Category Field -->
       <div class="mb-3">
-        <label for="category" class="form-label"
-          ><i class="fas fa-list-alt"></i> {{ form.category.label }}</label
-        >
-        {{ form.category(class_='form-control', id='category', size=32) }} {%
-        for error in form.category.errors %}
+        <label for="category" class="form-label">{{ form.category.label }}</label>
+        <select class="form-select" id="category" name="category"></select>
+        {% for error in form.category.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>
@@ -124,4 +119,29 @@
     </form>
   </div>
 </div>
+
+
+<script>
+  document.getElementById("type").addEventListener("change", function () {
+    const type = this.value;
+    const categorySelect = document.getElementById("category");
+    categorySelect.innerHTML = ""; // Clear previous options
+
+    fetch(`/get_categories/${type}`)
+      .then((response) => response.json())
+      .then((categories) => {
+        categories.forEach((category) => {
+          const option = document.createElement("option");
+          option.value = category.name;
+          option.textContent = category.name;
+          categorySelect.appendChild(option);
+        });
+      })
+      .catch((error) => console.error("Error fetching categories:", error));
+  });
+
+  // Trigger the change event on load to populate the initial categories
+  document.getElementById("type").dispatchEvent(new Event("change"));
+</script>
+
 {% endblock %}

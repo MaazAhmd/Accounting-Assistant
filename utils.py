@@ -6,8 +6,40 @@ import xlsxwriter
 from flask import send_file
 from docx import Document
 import matplotlib.pyplot as plt
-from models import Transaction, db
+from models import Transaction, db,Category
 from flask_login import current_user    
+
+
+
+
+def seed_categories():
+    asset_categories = [
+        "Intangible Assets", "Fixed Assets", "Long-Term Financial Assets",
+        "Deferred Taxes", "Inventory", "Receivables", "Receivables Over One Year",
+        "Investments", "Cash", "Prepaid Expenses", "Unpaid Capital"
+    ]
+
+    liability_categories = [
+        "Issued Capital", "Share Premiums", "Revaluation Reserve", "Reserves",
+        "Retained Earnings", "Current Profit/Loss", "Provisions",
+        "Liabilities Under One Year", "Liabilities Over One Year", "Deferred Income",
+        "Liabilities Debit", "Liabilities Credit"
+    ]
+
+    # Add asset categories
+    for category_name in asset_categories:
+        if not Category.query.filter_by(name=category_name, type="income").first():
+            db.session.add(Category(name=category_name, type="income"))
+
+    # Add liability categories
+    for category_name in liability_categories:
+        if not Category.query.filter_by(name=category_name, type="expense").first():
+            db.session.add(Category(name=category_name, type="expense"))
+
+    db.session.commit()
+    print("Categories seeded successfully.")
+
+
 
 def автоматично_дефинирана_категория(transaction_description):
     # Проста логика за определяне на категорията на база описание
