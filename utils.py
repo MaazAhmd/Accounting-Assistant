@@ -3,13 +3,20 @@ import os
 from collections import defaultdict
 from datetime import datetime
 from io import BytesIO
-import xlsxwriter
 from flask import send_file,make_response
 from docx import Document
-import matplotlib.pyplot as plt
+from docx.shared import Pt
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from models import Transaction, db,Category
 from flask_login import current_user  
 import pandas as pd
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+import tempfile
 
 
 
@@ -474,34 +481,62 @@ def calculate_liability_data(transactions):
 
 
 
+
 def export_income_expense_pdf():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     income_expense_data = calculate_income_expense_data(transactions)
 
-    # Data for plotting
-    categories = [key.replace('_', ' ') for key in income_expense_data.keys()]
-    values = list(income_expense_data.values())
+    # Prepare data for the table
+    table_data = [
+        ["Sections, Groups, Items", "Amount (thousand EUR) Current Year", "Amount (thousand EUR) Previous Year"]
+    ]
 
-    # Create the bar chart
-    fig, ax = plt.subplots(figsize=(8.5, 11))  # Letter size in inches
-    ax.barh(categories, values, color='skyblue')
-    ax.set_title("Income and Expense Statement", fontsize=16, pad=20)
-    ax.set_xlabel("Amount (EUR)", fontsize=12)
-    ax.set_ylabel("Categories", fontsize=12)
-    ax.tick_params(axis='y', labelsize=8)
-    plt.tight_layout()
+    # Populate table rows
+    table_data.extend([
+        ["1. Net Sales Revenue", income_expense_data.get("_1_net_sales_revenue_current", 0), income_expense_data.get("_1_net_sales_revenue_previous", 0)],
+        ["2. Other Revenue", income_expense_data.get("_2_other_revenue_current", 0), income_expense_data.get("_2_other_revenue_previous", 0)],
+        ["Total Revenue", income_expense_data.get("_total_revenue_current", 0), income_expense_data.get("_total_revenue_previous", 0)],
+        ["3. Raw Material Expenses", income_expense_data.get("_3_raw_material_expenses_current", 0), income_expense_data.get("_3_raw_material_expenses_previous", 0)],
+        ["4. Personnel Expenses", income_expense_data.get("_4_personnel_expenses_current", 0), income_expense_data.get("_4_personnel_expenses_previous", 0)],
+        ["5. Depreciation Expenses", income_expense_data.get("_5_depreciation_expenses_current", 0), income_expense_data.get("_5_depreciation_expenses_previous", 0)],
+        ["6. Other Expenses", income_expense_data.get("_6_other_expenses_current", 0), income_expense_data.get("_6_other_expenses_previous", 0)],
+        ["Total Expenses", income_expense_data.get("_total_expenses_current", 0), income_expense_data.get("_total_expenses_previous", 0)],
+        ["8. Accounting Profit", income_expense_data.get("_8_accounting_profit_current", 0), income_expense_data.get("_8_accounting_profit_previous", 0)],
+        ["9. Accounting Loss", income_expense_data.get("_9_accounting_loss_current", 0), income_expense_data.get("_9_accounting_loss_previous", 0)],
+        ["7. Tax Expenses", income_expense_data.get("_7_tax_expenses_current", 0), income_expense_data.get("_7_tax_expenses_previous", 0)],
+        ["10. Net Profit", income_expense_data.get("_10_net_profit_current", 0), income_expense_data.get("_10_net_profit_previous", 0)],
+        ["11. Total Loss", income_expense_data.get("_11_total_loss_current", 0), income_expense_data.get("_11_total_loss_previous", 0)],
+        ["Total Revenue (Including Loss)", income_expense_data.get("_total_all_revenue_current", 0), income_expense_data.get("_total_all_revenue_previous", 0)],
+        ["Total Expenses (Including Taxes and Net Profit)", income_expense_data.get("_total_all_expenses_current", 0), income_expense_data.get("_total_all_expenses_previous", 0)]
+    ])
 
-    # Save plot to PDF in memory
+    # Create PDF in memory
     buffer = io.BytesIO()
-    plt.savefig(buffer, format='pdf')
-    buffer.seek(0)
-    plt.close(fig)
+    pdf = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
 
-    # Create a Flask response to send the PDF
+    # Create the table
+    table = Table(table_data)
+    table_style = TableStyle([
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.blue),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ])
+    table.setStyle(table_style)
+    elements.append(table)
+
+    # Build the PDF
+    pdf.build(elements)
+
+    # Return the PDF response
+    buffer.seek(0)
     response = make_response(buffer.getvalue())
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=income_expense_statement.pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=income_expense_statement.pdf'
     return response
+
 
 
 
@@ -509,31 +544,110 @@ def export_income_expense_word():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     income_expense_data = calculate_income_expense_data(transactions)
 
+    # Create a Word document
     document = Document()
     document.add_heading("Income and Expense Statement", level=1)
 
-    # Add data to the Word document
-    for key, value in income_expense_data.items():
-        document.add_paragraph(f"{key.replace('_', ' ')}: {value}")
+    # Create the table
+    table = document.add_table(rows=1, cols=3)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = True
 
-    file_path = "/tmp/income_expense_statement.docx"
+    # Style for the header row
+    header_cells = table.rows[0].cells
+    header_cells[0].text = "Sections, Groups, Items"
+    header_cells[1].text = "Amount (thousand EUR) Current Year"
+    header_cells[2].text = "Amount (thousand EUR) Previous Year"
+
+    for cell in header_cells:
+        cell.paragraphs[0].runs[0].font.bold = True
+        cell.paragraphs[0].alignment = WD_TABLE_ALIGNMENT.CENTER
+
+        # Add a subtle blue background to header cells
+        tcPr = cell._element.find(qn('w:tcPr'))
+        if tcPr is None:
+            tcPr = OxmlElement('w:tcPr')
+            cell._element.insert(0, tcPr)
+
+        shading_elm = OxmlElement('w:shd')
+        shading_elm.set(qn('w:val'), 'clear')
+        shading_elm.set(qn('w:fill'), "ADD8E6")  # Light blue
+        tcPr.append(shading_elm)
+
+    # Populate the table rows with income/expense data
+    rows = [
+        ["1. Net Sales Revenue", income_expense_data.get("_1_net_sales_revenue_current", 0), income_expense_data.get("_1_net_sales_revenue_previous", 0)],
+        ["2. Other Revenue", income_expense_data.get("_2_other_revenue_current", 0), income_expense_data.get("_2_other_revenue_previous", 0)],
+        ["Total Revenue", income_expense_data.get("_total_revenue_current", 0), income_expense_data.get("_total_revenue_previous", 0)],
+        ["3. Raw Material Expenses", income_expense_data.get("_3_raw_material_expenses_current", 0), income_expense_data.get("_3_raw_material_expenses_previous", 0)],
+        ["4. Personnel Expenses", income_expense_data.get("_4_personnel_expenses_current", 0), income_expense_data.get("_4_personnel_expenses_previous", 0)],
+        ["5. Depreciation Expenses", income_expense_data.get("_5_depreciation_expenses_current", 0), income_expense_data.get("_5_depreciation_expenses_previous", 0)],
+        ["6. Other Expenses", income_expense_data.get("_6_other_expenses_current", 0), income_expense_data.get("_6_other_expenses_previous", 0)],
+        ["Total Expenses", income_expense_data.get("_total_expenses_current", 0), income_expense_data.get("_total_expenses_previous", 0)],
+        ["8. Accounting Profit", income_expense_data.get("_8_accounting_profit_current", 0), income_expense_data.get("_8_accounting_profit_previous", 0)],
+        ["9. Accounting Loss", income_expense_data.get("_9_accounting_loss_current", 0), income_expense_data.get("_9_accounting_loss_previous", 0)],
+        ["7. Tax Expenses", income_expense_data.get("_7_tax_expenses_current", 0), income_expense_data.get("_7_tax_expenses_previous", 0)],
+        ["10. Net Profit", income_expense_data.get("_10_net_profit_current", 0), income_expense_data.get("_10_net_profit_previous", 0)],
+        ["11. Total Loss", income_expense_data.get("_11_total_loss_current", 0), income_expense_data.get("_11_total_loss_previous", 0)],
+        ["Total Revenue (Including Loss)", income_expense_data.get("_total_all_revenue_current", 0), income_expense_data.get("_total_all_revenue_previous", 0)],
+        ["Total Expenses (Including Taxes and Net Profit)", income_expense_data.get("_total_all_expenses_current", 0), income_expense_data.get("_total_all_expenses_previous", 0)]
+    ]
+
+    for row in rows:
+        cells = table.add_row().cells
+        for i, data in enumerate(row):
+            cells[i].text = str(data)
+            cells[i].paragraphs[0].runs[0].font.size = Pt(10)  # Set font size
+            cells[i].paragraphs[0].alignment = WD_TABLE_ALIGNMENT.CENTER
+
+    # Save the document to a temporary file
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, "income_expense_statement.docx")
     document.save(file_path)
 
+    # Return the file as a response
     return send_file(file_path, as_attachment=True, download_name="income_expense_statement.docx")
+
+
+
 
 
 def export_income_expense_excel():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     income_expense_data = calculate_income_expense_data(transactions)
 
-    # Create a DataFrame
-    data = [{'Field': key.replace('_', ' '), 'Value': value} for key, value in income_expense_data.items()]
-    df = pd.DataFrame(data)
+    # Create a DataFrame with columns matching the HTML layout
+    columns = ["Sections, Groups, Items", "Amount (thousand EUR) Current Year", "Amount (thousand EUR) Previous Year"]
+    rows = [
+        ["1. Net Sales Revenue", income_expense_data.get("_1_net_sales_revenue_current", 0), income_expense_data.get("_1_net_sales_revenue_previous", 0)],
+        ["2. Other Revenue", income_expense_data.get("_2_other_revenue_current", 0), income_expense_data.get("_2_other_revenue_previous", 0)],
+        ["Total Revenue", income_expense_data.get("_total_revenue_current", 0), income_expense_data.get("_total_revenue_previous", 0)],
+        ["3. Raw Material Expenses", income_expense_data.get("_3_raw_material_expenses_current", 0), income_expense_data.get("_3_raw_material_expenses_previous", 0)],
+        ["4. Personnel Expenses", income_expense_data.get("_4_personnel_expenses_current", 0), income_expense_data.get("_4_personnel_expenses_previous", 0)],
+        ["5. Depreciation Expenses", income_expense_data.get("_5_depreciation_expenses_current", 0), income_expense_data.get("_5_depreciation_expenses_previous", 0)],
+        ["6. Other Expenses", income_expense_data.get("_6_other_expenses_current", 0), income_expense_data.get("_6_other_expenses_previous", 0)],
+        ["Total Expenses", income_expense_data.get("_total_expenses_current", 0), income_expense_data.get("_total_expenses_previous", 0)],
+        ["8. Accounting Profit", income_expense_data.get("_8_accounting_profit_current", 0), income_expense_data.get("_8_accounting_profit_previous", 0)],
+        ["9. Accounting Loss", income_expense_data.get("_9_accounting_loss_current", 0), income_expense_data.get("_9_accounting_loss_previous", 0)],
+        ["7. Tax Expenses", income_expense_data.get("_7_tax_expenses_current", 0), income_expense_data.get("_7_tax_expenses_previous", 0)],
+        ["10. Net Profit", income_expense_data.get("_10_net_profit_current", 0), income_expense_data.get("_10_net_profit_previous", 0)],
+        ["11. Total Loss", income_expense_data.get("_11_total_loss_current", 0), income_expense_data.get("_11_total_loss_previous", 0)],
+        ["Total Revenue (Including Loss)", income_expense_data.get("_total_all_revenue_current", 0), income_expense_data.get("_total_all_revenue_previous", 0)],
+        ["Total Expenses (Including Taxes and Net Profit)", income_expense_data.get("_total_all_expenses_current", 0), income_expense_data.get("_total_all_expenses_previous", 0)]
+    ]
 
-    file_path = "/tmp/income_expense_statement.xlsx"
+    # Create the DataFrame
+    df = pd.DataFrame(rows, columns=columns)
+
+    # Save the DataFrame to an Excel file
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, "income_expense_statement.xlsx")
     df.to_excel(file_path, index=False)
 
+    # Return the file as a response
     return send_file(file_path, as_attachment=True, download_name="income_expense_statement.xlsx")
+
+
 
 
 # # Export functions
