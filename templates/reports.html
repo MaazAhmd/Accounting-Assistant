@@ -20,21 +20,7 @@
 
 
     <!-- Export Section -->
-    <div class="text-center mb-4">
-        <h2 class="mb-3"><i class="fas fa-download"></i> {{ _('Export Income and Expense Report') }}</h2>
-        <p class="mb-4">{{ _('Please select a format to export your report:') }}</p>
-        <div class="btn-group" role="group" aria-label="Report Export Buttons">
-            <a href="{{ url_for('export_report', report_type='excel') }}" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> {{ _('Export as Excel') }}
-            </a>
-            <a href="{{ url_for('export_report', report_type='pdf') }}" class="btn btn-danger">
-                <i class="fas fa-file-pdf"></i> {{ _('Export as PDF') }}
-            </a>
-            <a href="{{ url_for('export_report', report_type='word') }}" class="btn btn-info">
-                <i class="fas fa-file-word"></i> {{ _('Export as Word') }}
-            </a>
-        </div>
-    </div>
+ 
 
     <!-- <h2>A. Expenses</h2>
 
@@ -42,8 +28,8 @@
     <thead>
         <tr>
             <th>EXPENSE NAME</th>
-            <th>Amount (thousand BGN) Current Year</th>
-            <th>Amount (thousand BGN) Previous Year</th>
+            <th>Amount (thousand EUR) Current Year</th>
+            <th>Amount (thousand EUR) Previous Year</th>
         </tr>
     </thead>
     <tbody>
@@ -100,8 +86,8 @@
     <thead>
         <tr>
             <th>REVENUE NAME</th>
-            <th>Amount (thousand BGN) Current Year</th>
-            <th>Amount (thousand BGN) Previous Year</th>
+            <th>Amount (thousand EUR) Current Year</th>
+            <th>Amount (thousand EUR) Previous Year</th>
         </tr>
     </thead>
     <tbody>
@@ -145,8 +131,8 @@
     <thead>
         <tr>
             <th>SECTIONS, GROUPS, ITEMS</th>
-            <th>Amount (thousand BGN) Current Year</th>
-            <th>Amount (thousand BGN) Previous Year</th>
+            <th>Amount (thousand EUR) Current Year</th>
+            <th>Amount (thousand EUR) Previous Year</th>
         </tr>
     </thead>
     <tbody>
@@ -238,8 +224,8 @@
     <thead>
         <tr>
             <th>SECTIONS, GROUPS, ITEMS</th>
-            <th>Amount (thousand BGN) Current Year</th>
-            <th>Amount (thousand BGN) Previous Year</th>
+            <th>Amount (thousand EUR) Current Year</th>
+            <th>Amount (thousand EUR) Previous Year</th>
         </tr>
     </thead>
     <tbody>

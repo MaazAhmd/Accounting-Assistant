@@ -1,13 +1,17 @@
+import io
 import os
 from collections import defaultdict
 from datetime import datetime
 from io import BytesIO
 import xlsxwriter
-from flask import send_file
+from flask import send_file,make_response
 from docx import Document
 import matplotlib.pyplot as plt
 from models import Transaction, db,Category
-from flask_login import current_user    
+from flask_login import current_user  
+import pandas as pd
+
+
 
 
 
@@ -466,70 +470,136 @@ def calculate_liability_data(transactions):
     return liability_data
 
 
-# Export functions
-def export_to_excel(transactions):
-    output = BytesIO()
-    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-    worksheet = workbook.add_worksheet()
 
-    # Write headers
-    headers = ['Date', 'Type', 'Category', 'Amount', 'Description']
-    for col_num, header in enumerate(headers):
-        worksheet.write(0, col_num, header)
 
-    # Write transaction data
-    for row_num, transaction in enumerate(transactions, start=1):
-        worksheet.write(row_num, 0, transaction.date.strftime('%Y-%m-%d'))
-        worksheet.write(row_num, 1, transaction.type)
-        worksheet.write(row_num, 2, transaction.category)
-        worksheet.write(row_num, 3, transaction.amount)
-        worksheet.write(row_num, 4, transaction.description)
 
-    workbook.close()
-    output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                     as_attachment=True, download_name='Income_Expense_Report.xlsx')
 
-    
+def export_income_expense_pdf():
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    income_expense_data = calculate_income_expense_data(transactions)
 
-def export_to_pdf(transactions):
-    # Generate PDF using matplotlib or reportlab
-    output = BytesIO()
-    plt.figure(figsize=(8, 6))
-    categories = [t.category for t in transactions]
-    amounts = [t.amount for t in transactions]
-    plt.bar(categories, amounts)
-    plt.title('Expenses by Category')
-    plt.xlabel('Categories')
-    plt.ylabel('Amount')
+    # Data for plotting
+    categories = [key.replace('_', ' ') for key in income_expense_data.keys()]
+    values = list(income_expense_data.values())
+
+    # Create the bar chart
+    fig, ax = plt.subplots(figsize=(8.5, 11))  # Letter size in inches
+    ax.barh(categories, values, color='skyblue')
+    ax.set_title("Income and Expense Statement", fontsize=16, pad=20)
+    ax.set_xlabel("Amount (EUR)", fontsize=12)
+    ax.set_ylabel("Categories", fontsize=12)
+    ax.tick_params(axis='y', labelsize=8)
     plt.tight_layout()
-    plt.savefig(output, format='pdf')
-    output.seek(0)
-    return send_file(output, mimetype='application/pdf', as_attachment=True, download_name='Income_Expense_Report.pdf')
+
+    # Save plot to PDF in memory
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='pdf')
+    buffer.seek(0)
+    plt.close(fig)
+
+    # Create a Flask response to send the PDF
+    response = make_response(buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=income_expense_statement.pdf'
+    return response
+
+
+
+def export_income_expense_word():
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    income_expense_data = calculate_income_expense_data(transactions)
+
+    document = Document()
+    document.add_heading("Income and Expense Statement", level=1)
+
+    # Add data to the Word document
+    for key, value in income_expense_data.items():
+        document.add_paragraph(f"{key.replace('_', ' ')}: {value}")
+
+    file_path = "/tmp/income_expense_statement.docx"
+    document.save(file_path)
+
+    return send_file(file_path, as_attachment=True, download_name="income_expense_statement.docx")
+
+
+def export_income_expense_excel():
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    income_expense_data = calculate_income_expense_data(transactions)
+
+    # Create a DataFrame
+    data = [{'Field': key.replace('_', ' '), 'Value': value} for key, value in income_expense_data.items()]
+    df = pd.DataFrame(data)
+
+    file_path = "/tmp/income_expense_statement.xlsx"
+    df.to_excel(file_path, index=False)
+
+    return send_file(file_path, as_attachment=True, download_name="income_expense_statement.xlsx")
+
+
+# # Export functions
+# def export_to_excel(transactions):
+#     output = BytesIO()
+#     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+#     worksheet = workbook.add_worksheet()
+
+#     # Write headers
+#     headers = ['Date', 'Type', 'Category', 'Amount', 'Description']
+#     for col_num, header in enumerate(headers):
+#         worksheet.write(0, col_num, header)
+
+#     # Write transaction data
+#     for row_num, transaction in enumerate(transactions, start=1):
+#         worksheet.write(row_num, 0, transaction.date.strftime('%Y-%m-%d'))
+#         worksheet.write(row_num, 1, transaction.type)
+#         worksheet.write(row_num, 2, transaction.category)
+#         worksheet.write(row_num, 3, transaction.amount)
+#         worksheet.write(row_num, 4, transaction.description)
+
+#     workbook.close()
+#     output.seek(0)
+#     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+#                      as_attachment=True, download_name='Income_Expense_Report.xlsx')
 
     
 
-def export_to_word(transactions):
-    document = Document()
-    document.add_heading('Income and Expense Report', level=1)
-    table = document.add_table(rows=1, cols=5)
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Date'
-    hdr_cells[1].text = 'Type'
-    hdr_cells[2].text = 'Category'
-    hdr_cells[3].text = 'Amount'
-    hdr_cells[4].text = 'Description'
+# def export_to_pdf(transactions):
+#     # Generate PDF using matplotlib or reportlab
+#     output = BytesIO()
+#     plt.figure(figsize=(8, 6))
+#     categories = [t.category for t in transactions]
+#     amounts = [t.amount for t in transactions]
+#     plt.bar(categories, amounts)
+#     plt.title('Expenses by Category')
+#     plt.xlabel('Categories')
+#     plt.ylabel('Amount')
+#     plt.tight_layout()
+#     plt.savefig(output, format='pdf')
+#     output.seek(0)
+#     return send_file(output, mimetype='application/pdf', as_attachment=True, download_name='Income_Expense_Report.pdf')
 
-    for transaction in transactions:
-        row_cells = table.add_row().cells
-        row_cells[0].text = transaction.date.strftime('%Y-%m-%d')
-        row_cells[1].text = transaction.type
-        row_cells[2].text = transaction.category
-        row_cells[3].text = str(transaction.amount)
-        row_cells[4].text = transaction.description
+    
 
-    output = BytesIO()
-    document.save(output)
-    output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                     as_attachment=True, download_name='Income_Expense_Report.docx')
+# def export_to_word(transactions):
+#     document = Document()
+#     document.add_heading('Income and Expense Report', level=1)
+#     table = document.add_table(rows=1, cols=5)
+#     hdr_cells = table.rows[0].cells
+#     hdr_cells[0].text = 'Date'
+#     hdr_cells[1].text = 'Type'
+#     hdr_cells[2].text = 'Category'
+#     hdr_cells[3].text = 'Amount'
+#     hdr_cells[4].text = 'Description'
+
+#     for transaction in transactions:
+#         row_cells = table.add_row().cells
+#         row_cells[0].text = transaction.date.strftime('%Y-%m-%d')
+#         row_cells[1].text = transaction.type
+#         row_cells[2].text = transaction.category
+#         row_cells[3].text = str(transaction.amount)
+#         row_cells[4].text = transaction.description
+
+#     output = BytesIO()
+#     document.save(output)
+#     output.seek(0)
+#     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+#                      as_attachment=True, download_name='Income_Expense_Report.docx')

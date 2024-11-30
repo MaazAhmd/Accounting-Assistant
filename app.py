@@ -23,7 +23,7 @@ import re
 from docx import Document
 import base64
 
-from utils import calculate_income_expense_data, calculate_liability_data, recalculate_totals,export_to_excel,export_to_word,export_to_pdf, seed_categories,автоматично_дефинирана_категория,calculate_asset_data
+from utils import calculate_income_expense_data, calculate_liability_data, recalculate_totals, seed_categories,автоматично_дефинирана_категория,calculate_asset_data
 
 from wtforms import FileField
 from models import db, User, Account, Transaction, Category
@@ -391,34 +391,34 @@ def reports():
 
 
 # Route for generating and exporting income and expense reports
-@app.route('/export_report/<report_type>', methods=['GET'])
-@login_required
-def export_report(report_type):
-    transactions = Transaction.query.filter_by(account_id=current_user.accounts[0].id).all()
-    report_generated = False
-    exported_file = None
+# @app.route('/export_report/<report_type>', methods=['GET'])
+# @login_required
+# def export_report(report_type):
+#     transactions = Transaction.query.filter_by(account_id=current_user.accounts[0].id).all()
+#     report_generated = False
+#     exported_file = None
 
-    if not transactions:
-        flash(_('Not enough data to generate reports.'))
-    else:
-        if report_type == 'excel':
-            exported_file = export_to_excel(transactions)
-            report_generated = True
-        elif report_type == 'pdf':
-            exported_file = export_to_pdf(transactions)
-            report_generated = True
-        elif report_type == 'word':
-            exported_file = export_to_word(transactions)
-            report_generated = True
-        else:
-            flash(_('Unsupported report format.'))
+#     if not transactions:
+#         flash(_('Not enough data to generate reports.'))
+#     else:
+#         if report_type == 'excel':
+#             exported_file = export_to_excel(transactions)
+#             report_generated = True
+#         elif report_type == 'pdf':
+#             exported_file = export_to_pdf(transactions)
+#             report_generated = True
+#         elif report_type == 'word':
+#             exported_file = export_to_word(transactions)
+#             report_generated = True
+#         else:
+#             flash(_('Unsupported report format.'))
 
-    if report_generated:
-        return exported_file
-    else:
-        flash(_('Unable to generate the report due to missing or incorrect data.'))
-        print("Calling the function before redirect.")
-        return redirect(url_for('generate_reports'))
+#     if report_generated:
+#         return exported_file
+#     else:
+#         flash(_('Unable to generate the report due to missing or incorrect data.'))
+#         print("Calling the function before redirect.")
+#         return redirect(url_for('generate_reports'))
 
     
 

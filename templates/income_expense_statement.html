@@ -1,13 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
 
+
+<div class="export-buttons">
+    <a href="{{ url_for('transactions_blueprint.export_income_expense', type='pdf') }}" class="btn btn-primary">{{ _('Export as PDF') }}</a>
+    <a href="{{ url_for('transactions_blueprint.export_income_expense', type='word') }}" class="btn btn-primary">{{ _('Export as Word') }}</a>
+    <a href="{{ url_for('transactions_blueprint.export_income_expense', type='excel') }}" class="btn btn-primary">{{ _('Export as Excel') }}</a>
+</div>
+
 <h1>{{ _('Income and Expense Statement') }}</h1>
 <table class="table">
     <thead>
         <tr>
             <th>{{ _('Sections, Groups, Items') }}</th>
-            <th>{{ _('Amount (thousand BGN) Current Year') }}</th>
-            <th>{{ _('Amount (thousand BGN) Previous Year') }}</th>
+            <th>{{ _('Amount (thousand EUR) Current Year') }}</th>
+            <th>{{ _('Amount (thousand EUR) Previous Year') }}</th>
         </tr>
     </thead>
     <tbody>

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}General Ledger{% endblock %}
+
+{% block content %}
+<h1>General Ledger</h1>
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Total Debit</th>
+            <th>Total Credit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category, amounts in general_ledger.items() %}
+        <tr>
+            <td>{{ category }}</td>
+            <td>{{ amounts.debit }}</td>
+            <td>{{ amounts.credit }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Back to Transactions Button -->
+<div class="text-center mt-4">
+    <a href="{{ url_for('transactions_blueprint.view_user_transactions') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Transactions
+    </a>
+</div>
+{% endblock %}

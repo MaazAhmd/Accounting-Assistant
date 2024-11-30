@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from wrapper_functions import roles_required
 from forms import ManualTransactionForm, FileUploadForm
 from models import db, Transaction
-from utils import recalculate_totals, автоматично_дефинирана_категория
+from utils import export_income_expense_pdf, recalculate_totals, автоматично_дефинирана_категория, export_income_expense_word, export_income_expense_excel
 import logging
 
 transaction = Blueprint('transactions_blueprint', 'transaction')
@@ -309,6 +309,32 @@ def view_user_transactions():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     return render_template('transactions.html', transactions=transactions)
 
+
+@transaction.route('/generate_general_ledger', methods=['POST'])
+@login_required
+def generate_general_ledger():
+    # Fetch all transactions for the current user
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    # Create a summary of debits and credits
+    general_ledger = {}
+    for t in transactions:
+        category = t.category
+        if category not in general_ledger:
+            general_ledger[category] = {'debit': 0, 'credit': 0}
+
+        if t.is_credit:
+            general_ledger[category]['credit'] += t.amount
+        else:
+            general_ledger[category]['debit'] += t.amount
+
+    return render_template(
+        'general_ledger.html',
+        general_ledger=general_ledger,
+        transactions=transactions
+    )
+
+
 # Тук добави новия рут за изтриване на транзакция
 @transaction.route('/delete_transaction/<int:transaction_id>', methods=['POST'])
 @login_required
@@ -326,6 +352,22 @@ def delete_transaction(transaction_id):
     # Актуализиране на общите стойности след изтриване
     recalculate_totals()
 
-    flash('Транзакцията беше успешно изтрита.', 'success')
+    flash('Transaction successfully deleted.', 'success')
     return render_template('transactions.html', transactions=Transaction.query.filter_by(user_id=current_user.id).all())
+
+
+@transaction.route('/export_income_expense/<string:type>')
+@login_required
+def export_income_expense(type):
+    """
+    Exports the income and expense statement in the format specified by `type`.
+    """
+    if type == 'pdf':
+        return export_income_expense_pdf()
+    elif type == 'word':
+        return export_income_expense_word()
+    elif type == 'excel':
+        return export_income_expense_excel()
+    else:
+        return "Invalid export type. Use 'pdf', 'word', or 'excel'.", 400
 
