@@ -5,6 +5,15 @@
 {% block content %}
 <h1>{{ _('Balance Sheet') }}</h1>
 <div>
+    <h1>Balance Sheet Export</h1>
+    <form method="get" action="{{ url_for('transactions_blueprint.export_balance_sheet') }}">
+        <button type="submit" name="type" value="pdf" class="btn btn-primary">Export as PDF</button>
+        <button type="submit" name="type" value="word" class="btn btn-success">Export as Word</button>
+        <button type="submit" name="type" value="excel" class="btn btn-info">Export as Excel</button>
+    </form>
+</div>
+
+<div>
     <!-- Assets -->
     <h2>{{ _('Assets') }}</h2>
     {% include 'balance_sheet_assets.html' %}
@@ -13,7 +22,7 @@
     <h2>{{ _('Liabilities') }}</h2>
     {% include 'balance_sheet_liabilities.html' %}
     <!-- Balance Summary -->
-    <h2>{{ _('Balance Summary') }}</h2>
+    <!-- <h2>{{ _('Balance Summary') }}</h2>
     <table>
         <tr>
             <th>Debit Total</th>
@@ -23,7 +32,7 @@
             <th>Credit Total</th>
             <td>{{ credit_total }}</td>
         </tr>
-    </table>
+    </table> -->
 </div>
 {% endblock %}
 

@@ -8,6 +8,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from reportlab.lib.styles import getSampleStyleSheet
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from models import Transaction, db,Category
 from flask_login import current_user  
@@ -15,7 +16,7 @@ import pandas as pd
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Paragraph
 import tempfile
 
 
@@ -481,7 +482,6 @@ def calculate_liability_data(transactions):
 
 
 
-
 def export_income_expense_pdf():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
     income_expense_data = calculate_income_expense_data(transactions)
@@ -646,6 +646,398 @@ def export_income_expense_excel():
 
     # Return the file as a response
     return send_file(file_path, as_attachment=True, download_name="income_expense_statement.xlsx")
+
+
+def export_balance_sheet_pdf():
+    # Fetch data using the calculation functions
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    assets = calculate_asset_data(transactions)
+    liabilities = calculate_liability_data(transactions)
+
+    # Create a PDF document
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    normal_style = styles["Normal"]
+
+    # Add Title
+    elements.append(Paragraph("Balance Sheet", title_style))
+
+    # **Assets Section**
+    elements.append(Paragraph("Assets", styles["Heading2"]))
+    asset_data = [
+        ["Sections, Groups, Items", "Amount (Current Year)", "Amount (Previous Year)"]
+    ]
+    asset_data.extend([
+        ["A. Subscribed but Unpaid Capital", assets["A_asset_unpaid_capital_current"], assets["A_asset_unpaid_capital_previous"]],
+        ["B. Non-Current (Long-Term) Assets", "", ""],
+        ["  I. Intangible Assets", assets["B_intangible_assets_current"], assets["B_intangible_assets_previous"]],
+        ["  II. Property, Plant, and Equipment", assets["B_fixed_assets_current"], assets["B_fixed_assets_previous"]],
+        ["  III. Long-Term Financial Assets", assets["B_long_term_financial_assets_current"], assets["B_long_term_financial_assets_previous"]],
+        ["  IV. Deferred Taxes", assets["B_deferred_taxes_current"], assets["B_deferred_taxes_previous"]],
+        ["  Total for Section B", assets["B_total_noncurrent_assets_current"], assets["B_total_noncurrent_assets_previous"]],
+        ["C. Current (Short-Term) Assets", "", ""],
+        ["  I. Inventory", assets["C_inventory_current"], assets["C_inventory_previous"]],
+        ["  II. Receivables", assets["C_receivables_current"], assets["C_receivables_previous"]],
+        ["  III. Investments", assets["C_investments_current"], assets["C_investments_previous"]],
+        ["  IV. Cash and Cash Equivalents", assets["C_cash_current"], assets["C_cash_previous"]],
+        ["  Total for Section C", assets["C_total_current_assets_current"], assets["C_total_current_assets_previous"]],
+        ["D. Prepaid Expenses", assets["D_prepaid_expenses_current"], assets["D_prepaid_expenses_previous"]],
+        ["TOTAL ASSETS", assets["total_assets_current"], assets["total_assets_previous"]]
+    ])
+    asset_table = Table(asset_data, hAlign="LEFT")
+    asset_table.setStyle(TableStyle([
+                                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.blue),
+                                     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                     ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                     ('GRID', (0, 0), (-1, -1), 1, colors.black)]))
+    elements.append(asset_table)
+
+    # **Liabilities Section**
+    elements.append(Paragraph("Liabilities", styles["Heading2"]))
+    liability_data = [
+        ["Sections, Groups, Items", "Amount (Current Year)", "Amount (Previous Year)"]
+    ]
+    liability_data.extend([
+        ["A. Equity", "", ""],
+        ["  I. Issued Capital", liabilities["A_issued_capital_current"], liabilities["A_issued_capital_previous"]],
+        ["  II. Share Premiums", liabilities["A_share_premiums_current"], liabilities["A_share_premiums_previous"]],
+        ["  III. Revaluation Reserve", liabilities["A_revaluation_reserve_current"], liabilities["A_revaluation_reserve_previous"]],
+        ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
+        ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
+        ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
+        ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
+        ["C. Liabilities", "", ""],
+        ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
+        ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
+        ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]]
+    ])
+    liability_table = Table(liability_data, hAlign="LEFT")
+
+    liability_table.setStyle(TableStyle([
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.blue),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(liability_table)
+
+    # Fetch all valid categories from the database
+    valid_categories = {category.name: category.type for category in Category.query.all()}
+
+    # Initialize debit and credit totals
+    debit_total = 0.0
+    credit_total = 0.0
+
+    # Calculate totals based on `is_credit` and validate categories
+    for transaction in transactions:
+        category_name = transaction.category
+        transaction_type = 'income' if transaction.is_credit else 'expense'
+
+        # Skip the transaction if the category is invalid
+        if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
+            continue
+
+        # Add to the appropriate total
+        if transaction.is_credit:
+            credit_total += transaction.amount
+        else:
+            debit_total += transaction.amount
+    # **Balance Summary**
+    # elements.append(Paragraph("Balance Summary", styles["Heading2"]))
+    # summary_data = [
+    #     ["Summary", "Amount"],
+    #     ["Debit Total", debit_total],
+    #     ["Credit Total", credit_total]
+    # ]
+    # summary_table = Table(summary_data, hAlign="CENTER")
+    # summary_table.setStyle(TableStyle([
+    #     ('TEXTCOLOR', (0, 0), (-1, 0), colors.blue),
+    #     ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    #     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+    #     ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+    #     ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    # ]))  
+    # elements.append(summary_table)
+
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+
+    # Return the response
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = "attachment; filename=balance_sheet.pdf"
+    response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+
+
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+
+def export_balance_sheet_word():
+    # Fetch data using the calculation functions
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    assets = calculate_asset_data(transactions)
+    liabilities = calculate_liability_data(transactions)
+
+    # Create a Word document
+    doc = Document()
+
+    # Title
+    title = doc.add_heading("Balance Sheet", level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # **Assets Section**
+    doc.add_heading("Assets", level=2)
+    asset_table = doc.add_table(rows=1, cols=3)
+    asset_table.style = 'Table Grid'
+
+    # Add headers
+    headers = asset_table.rows[0].cells
+    headers[0].text = "Sections, Groups, Items"
+    headers[1].text = "Amount (Current Year)"
+    headers[2].text = "Amount (Previous Year)"
+
+    # Add asset data
+    asset_data = [
+        ["A. Subscribed but Unpaid Capital", assets["A_asset_unpaid_capital_current"], assets["A_asset_unpaid_capital_previous"]],
+        ["B. Non-Current (Long-Term) Assets", "", ""],
+        ["  I. Intangible Assets", assets["B_intangible_assets_current"], assets["B_intangible_assets_previous"]],
+        ["  II. Property, Plant, and Equipment", assets["B_fixed_assets_current"], assets["B_fixed_assets_previous"]],
+        ["  III. Long-Term Financial Assets", assets["B_long_term_financial_assets_current"], assets["B_long_term_financial_assets_previous"]],
+        ["  IV. Deferred Taxes", assets["B_deferred_taxes_current"], assets["B_deferred_taxes_previous"]],
+        ["  Total for Section B", assets["B_total_noncurrent_assets_current"], assets["B_total_noncurrent_assets_previous"]],
+        ["C. Current (Short-Term) Assets", "", ""],
+        ["  I. Inventory", assets["C_inventory_current"], assets["C_inventory_previous"]],
+        ["  II. Receivables", assets["C_receivables_current"], assets["C_receivables_previous"]],
+        ["  III. Investments", assets["C_investments_current"], assets["C_investments_previous"]],
+        ["  IV. Cash and Cash Equivalents", assets["C_cash_current"], assets["C_cash_previous"]],
+        ["  Total for Section C", assets["C_total_current_assets_current"], assets["C_total_current_assets_previous"]],
+        ["D. Prepaid Expenses", assets["D_prepaid_expenses_current"], assets["D_prepaid_expenses_previous"]],
+        ["TOTAL ASSETS", assets["total_assets_current"], assets["total_assets_previous"]],
+    ]
+    for row in asset_data:
+        cells = asset_table.add_row().cells
+        cells[0].text, cells[1].text, cells[2].text = map(str, row)
+
+    # **Liabilities Section**
+    doc.add_heading("Liabilities", level=2)
+    liability_table = doc.add_table(rows=1, cols=3)
+    liability_table.style = 'Table Grid'
+
+    # Add headers
+    headers = liability_table.rows[0].cells
+    headers[0].text = "Sections, Groups, Items"
+    headers[1].text = "Amount (Current Year)"
+    headers[2].text = "Amount (Previous Year)"
+
+    # Add liability data
+    liability_data = [
+        ["A. Equity", "", ""],
+        ["  I. Issued Capital", liabilities["A_issued_capital_current"], liabilities["A_issued_capital_previous"]],
+        ["  II. Share Premiums", liabilities["A_share_premiums_current"], liabilities["A_share_premiums_previous"]],
+        ["  III. Revaluation Reserve", liabilities["A_revaluation_reserve_current"], liabilities["A_revaluation_reserve_previous"]],
+        ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
+        ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
+        ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
+        ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
+        ["C. Liabilities", "", ""],
+        ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
+        ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
+        ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]],
+    ]
+    for row in liability_data:
+        cells = liability_table.add_row().cells
+        cells[0].text, cells[1].text, cells[2].text = map(str, row)
+
+    # # **Balance Summary**
+    # doc.add_heading("Balance Summary", level=2)
+    # summary_table = doc.add_table(rows=1, cols=2)
+    # summary_table.style = 'Table Grid'
+
+    # # Add headers
+    # summary_headers = summary_table.rows[0].cells
+    # summary_headers[0].text = "Summary"
+    # summary_headers[1].text = "Amount"
+
+    # # Fetch all valid categories from the database
+    # valid_categories = {category.name: category.type for category in Category.query.all()}
+
+    # # Initialize debit and credit totals
+    # debit_total = 0.0
+    # credit_total = 0.0
+
+    # # Calculate totals based on `is_credit` and validate categories
+    # for transaction in transactions:
+    #     category_name = transaction.category
+    #     transaction_type = 'income' if transaction.is_credit else 'expense'
+
+    #     # Skip the transaction if the category is invalid
+    #     if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
+    #         continue
+
+    #     # Add to the appropriate total
+    #     if transaction.is_credit:
+    #         credit_total += transaction.amount
+    #     else:
+    #         debit_total += transaction.amount
+
+
+    # summary_data = [
+    #     ["Debit Total", debit_total],
+    #     ["Credit Total", credit_total],
+    # ]
+    # for row in summary_data:
+    #     cells = summary_table.add_row().cells
+    #     cells[0].text, cells[1].text = map(str, row)
+
+    # Save the document to a buffer
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+
+    # Return the response
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = "attachment; filename=balance_sheet.docx"
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    return response
+
+
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from flask import make_response
+
+def export_balance_sheet_excel():
+    # Fetch data using the calculation functions
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    assets = calculate_asset_data(transactions)
+    liabilities = calculate_liability_data(transactions)
+
+    # Create a new Excel workbook and active sheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Balance Sheet"
+
+    # Title
+    ws.merge_cells("A1:C1")
+    title_cell = ws["A1"]
+    title_cell.value = "Balance Sheet"
+    title_cell.font = Font(size=16, bold=True)
+    title_cell.alignment = Alignment(horizontal="center")
+
+    # **Assets Section**
+    ws.append([""])  # Blank row for spacing
+    ws.append(["Assets"])
+    ws["A3"].font = Font(size=14, bold=True)
+
+    # Add asset headers
+    ws.append(["Sections, Groups, Items", "Amount (Current Year)", "Amount (Previous Year)"])
+    header_row = ws[4]
+    for cell in header_row:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+
+    # Add asset data
+    asset_data = [
+        ["A. Subscribed but Unpaid Capital", assets["A_asset_unpaid_capital_current"], assets["A_asset_unpaid_capital_previous"]],
+        ["B. Non-Current (Long-Term) Assets", "", ""],
+        ["  I. Intangible Assets", assets["B_intangible_assets_current"], assets["B_intangible_assets_previous"]],
+        ["  II. Property, Plant, and Equipment", assets["B_fixed_assets_current"], assets["B_fixed_assets_previous"]],
+        ["  III. Long-Term Financial Assets", assets["B_long_term_financial_assets_current"], assets["B_long_term_financial_assets_previous"]],
+        ["  IV. Deferred Taxes", assets["B_deferred_taxes_current"], assets["B_deferred_taxes_previous"]],
+        ["  Total for Section B", assets["B_total_noncurrent_assets_current"], assets["B_total_noncurrent_assets_previous"]],
+        ["C. Current (Short-Term) Assets", "", ""],
+        ["  I. Inventory", assets["C_inventory_current"], assets["C_inventory_previous"]],
+        ["  II. Receivables", assets["C_receivables_current"], assets["C_receivables_previous"]],
+        ["  III. Investments", assets["C_investments_current"], assets["C_investments_previous"]],
+        ["  IV. Cash and Cash Equivalents", assets["C_cash_current"], assets["C_cash_previous"]],
+        ["  Total for Section C", assets["C_total_current_assets_current"], assets["C_total_current_assets_previous"]],
+        ["D. Prepaid Expenses", assets["D_prepaid_expenses_current"], assets["D_prepaid_expenses_previous"]],
+        ["TOTAL ASSETS", assets["total_assets_current"], assets["total_assets_previous"]],
+    ]
+    for row in asset_data:
+        ws.append(row)
+
+    # **Liabilities Section**
+    ws.append([""])  # Blank row for spacing
+    ws.append(["Liabilities"])
+    ws[f"A{len(ws['A'])}"].font = Font(size=14, bold=True)
+
+    # Add liability headers
+    ws.append(["Sections, Groups, Items", "Amount (Current Year)", "Amount (Previous Year)"])
+    header_row = ws[len(ws['A'])]
+    for cell in header_row:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+
+    # Add liability data
+    liability_data = [
+        ["A. Equity", "", ""],
+        ["  I. Issued Capital", liabilities["A_issued_capital_current"], liabilities["A_issued_capital_previous"]],
+        ["  II. Share Premiums", liabilities["A_share_premiums_current"], liabilities["A_share_premiums_previous"]],
+        ["  III. Revaluation Reserve", liabilities["A_revaluation_reserve_current"], liabilities["A_revaluation_reserve_previous"]],
+        ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
+        ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
+        ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
+        ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
+        ["C. Liabilities", "", ""],
+        ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
+        ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
+        ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]],
+    ]
+    for row in liability_data:
+        ws.append(row)
+
+    # # **Balance Summary**
+    # ws.append([""])  # Blank row for spacing
+    # ws.append(["Balance Summary"])
+    # ws[f"A{len(ws['A'])}"].font = Font(size=14, bold=True)
+    # ws.append(["Summary", "Amount"])
+    # summary_headers = ws[len(ws['A'])]
+    # for cell in summary_headers:
+    #     cell.font = Font(bold=True)
+    #     cell.alignment = Alignment(horizontal="center")
+
+    # # Calculate totals based on `is_credit`
+    # debit_total = sum(t.amount for t in transactions if not t.is_credit)
+    # credit_total = sum(t.amount for t in transactions if t.is_credit)
+    # summary_data = [
+    #     ["Debit Total", debit_total],
+    #     ["Credit Total", credit_total],
+    # ]
+    # for row in summary_data:
+    #     ws.append(row)
+
+    # Save the workbook to a buffer
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    # Return the response
+    response = make_response(buffer.read())
+    response.headers["Content-Disposition"] = "attachment; filename=balance_sheet.xlsx"
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return response
+
 
 
 

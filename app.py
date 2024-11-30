@@ -196,13 +196,36 @@ def balance_sheet():
 
     liability_data = calculate_liability_data(transactions)
 
+    # Fetch all valid categories from the database
+    valid_categories = {category.name: category.type for category in Category.query.all()}
+
+    # Initialize debit and credit totals
+    debit_total = 0.0
+    credit_total = 0.0
+
+    # Calculate totals based on `is_credit` and validate categories
+    for transaction in transactions:
+        category_name = transaction.category
+        transaction_type = 'income' if transaction.is_credit else 'expense'
+
+        # Skip the transaction if the category is invalid
+        if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
+            continue
+        print(transaction.amount, transaction.is_credit, transaction.category, transaction_type, valid_categories[category_name])
+        # Add to the appropriate total
+        if transaction.is_credit:
+            credit_total += transaction.amount
+        else:
+            debit_total += transaction.amount
+
     # Data validation checks for both assets and liabilities
     for key, value in {**asset_data, **liability_data}.items():
         if isinstance(value, (int, float)) and value < 0:
             flash(f"Invalid data: {key} cannot be negative.", 'error')
             
             print("Calling function before rendering 'balance_sheet_combined.html'")
-    return render_template('balance_sheet_combined.html', assets=asset_data, liabilities=liability_data)
+    return render_template('balance_sheet_combined.html', assets=asset_data, liabilities=liability_data, debit_total=debit_total,
+        credit_total=credit_total)
 
 
 

@@ -7,3 +7,4 @@ date,type,category,is_credit,income_statement_category,amount,description
 2024-01-20,income,Intangible Assets,,Net sales revenue,400,Stock dividends
 2024-01-21,expense,Issued Capital,True,Other expenses,100,Movie night
 2024-01-22,expense,Retained Earnings,True,Other expenses,50,Gas refill
+

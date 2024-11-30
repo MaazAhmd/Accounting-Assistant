@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from wrapper_functions import roles_required
 from forms import ManualTransactionForm, FileUploadForm
 from models import db, Transaction
-from utils import export_income_expense_pdf, recalculate_totals, автоматично_дефинирана_категория, export_income_expense_word, export_income_expense_excel
+from utils import export_balance_sheet_excel, export_balance_sheet_pdf, export_balance_sheet_word, export_income_expense_pdf, recalculate_totals, автоматично_дефинирана_категория, export_income_expense_word, export_income_expense_excel
 import logging
 
 transaction = Blueprint('transactions_blueprint', 'transaction')
@@ -371,3 +371,14 @@ def export_income_expense(type):
     else:
         return "Invalid export type. Use 'pdf', 'word', or 'excel'.", 400
 
+@transaction.route('/export_balance_sheet', methods=['GET'])
+def export_balance_sheet():
+    export_type = request.args.get('type')
+    if export_type == 'pdf':
+        return export_balance_sheet_pdf()
+    elif export_type == 'word':
+        return export_balance_sheet_word()
+    elif export_type == 'excel':
+        return export_balance_sheet_excel()
+    else:
+        return "Invalid export type", 400
