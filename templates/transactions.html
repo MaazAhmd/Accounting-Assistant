@@ -11,7 +11,8 @@
             <th>Date</th>
             <th>Type</th>
             <th>Category</th>
-            <th>Amount</th>
+            <th>Debit</th>
+            <th>Credit</th>
             <th>Description</th>
             <th>Action</th>
         </tr>
@@ -22,12 +23,8 @@
             <td>{{ t.date.strftime('%Y-%m-%d') }}</td>
             <td>{{ 'Income' if t.type == 'income' else 'Expense' }}</td>
             <td>{{ t.category }}</td>
-            <td>
-                {{ t.amount }}
-                <span class="badge bg-{{ 'success' if t.is_credit else 'danger' }}">
-                    {{ 'Credit' if t.is_credit else 'Debit' }}
-                </span>
-            </td>
+            <td>{{ t.debit or 'N/A' }}</td> <!-- Display debit value -->
+            <td>{{ t.credit or 'N/A' }}</td> <!-- Display credit value -->
             <td>{{ t.description }}</td>
             <td>
                 <form action="{{ url_for('transactions_blueprint.delete_transaction', transaction_id=t.id) }}" method="POST" style="display:inline;">
@@ -53,4 +50,3 @@
 <p>You have no transactions recorded.</p>
 {% endif %}
 {% endblock %}
-

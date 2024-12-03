@@ -51,7 +51,7 @@ class ManualTransactionForm(FlaskForm):
             ('Other revenue', 'Other revenue'),
         ]
     )
-    is_credit = BooleanField('Is Credit?')
+    credit = BooleanField('Is Credit?')
     amount = FloatField('Amount', validators=[DataRequired(), NumberRange(min=0)])
     description = TextAreaField('Description', validators=[DataRequired()])
     submit = SubmitField('Add Transaction')

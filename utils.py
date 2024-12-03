@@ -81,13 +81,13 @@ def recalculate_totals():
     liabilities_credit_total = 0.0
 
     for transaction in transactions:
-        if not transaction.is_credit:
+        if not transaction.credit:
             if transaction.type =='income':
                 asset_debit_total += transaction.amount
             elif transaction.type=='expense':
                 liabilities_debit_total += transaction.amount
 
-        if transaction.is_credit:
+        if transaction.credit:
             if transaction.type == 'income':
                 asset_credit_total += transaction.amount
             elif transaction.type =='expense':
@@ -246,59 +246,42 @@ def calculate_asset_data(transactions):
     current_year = datetime.now().year
     previous_year = current_year - 1
 
-    # Group transactions by category and year
+    # Map balance sheet categories to the asset_data keys (normalized to lowercase)
+    category_mapping = {
+        "unpaid capital": "A_asset_unpaid_capital",
+        "intangible assets": "B_intangible_assets",
+        "fixed assets": "B_fixed_assets",
+        "long-term financial assets": "B_long_term_financial_assets",
+        "deferred taxes": "B_deferred_taxes",
+        "inventory": "C_inventory",
+        "receivables": "C_receivables",
+        "receivables over one year": "C_receivables_over_one_year",
+        "investments": "C_investments",
+        "cash": "C_cash",
+        "prepaid expenses": "D_prepaid_expenses",
+    }
+
+    # Iterate over transactions
     for transaction in transactions:
         year = transaction.date.year
-        category = transaction.category
+        debit_category = transaction.debit.lower() if transaction.debit else ""
+        credit_category = transaction.credit.lower() if transaction.credit else ""
         amount = transaction.amount
 
+        # Determine the prefix (current or previous)
         if year == current_year:
-            if category == "Intangible Assets":
-                asset_data['B_intangible_assets_current'] += amount
-            elif category == "Fixed Assets":
-                asset_data['B_fixed_assets_current'] += amount
-            elif category == "Long-Term Financial Assets":
-                asset_data['B_long_term_financial_assets_current'] += amount
-            elif category == "Deferred Taxes":
-                asset_data['B_deferred_taxes_current'] += amount
-            elif category == "Inventory":
-                asset_data['C_inventory_current'] += amount
-            elif category == "Receivables":
-                asset_data['C_receivables_current'] += amount
-            elif category == "Receivables Over One Year":
-                asset_data['C_receivables_over_one_year_current'] += amount
-            elif category == "Investments":
-                asset_data['C_investments_current'] += amount
-            elif category == "Cash":
-                asset_data['C_cash_current'] += amount
-            elif category == "Prepaid Expenses":
-                asset_data['D_prepaid_expenses_current'] += amount
-            elif category == "Unpaid Capital":
-                asset_data['A_asset_unpaid_capital_current'] += amount
-
+            suffix = "_current"
         elif year == previous_year:
-            if category == "Intangible Assets":
-                asset_data['B_intangible_assets_previous'] += amount
-            elif category == "Fixed Assets":
-                asset_data['B_fixed_assets_previous'] += amount
-            elif category == "Long-Term Financial Assets":
-                asset_data['B_long_term_financial_assets_previous'] += amount
-            elif category == "Deferred Taxes":
-                asset_data['B_deferred_taxes_previous'] += amount
-            elif category == "Inventory":
-                asset_data['C_inventory_previous'] += amount
-            elif category == "Receivables":
-                asset_data['C_receivables_previous'] += amount
-            elif category == "Receivables Over One Year":
-                asset_data['C_receivables_over_one_year_previous'] += amount
-            elif category == "Investments":
-                asset_data['C_investments_previous'] += amount
-            elif category == "Cash":
-                asset_data['C_cash_previous'] += amount
-            elif category == "Prepaid Expenses":
-                asset_data['D_prepaid_expenses_previous'] += amount
-            elif category == "Unpaid Capital":
-                asset_data['A_asset_unpaid_capital_previous'] += amount
+            suffix = "_previous"
+        else:
+            continue  # Skip transactions that don't fall in the current or previous year
+
+        # Add the amount to the respective debit or credit category
+        if debit_category in category_mapping:
+            asset_data[category_mapping[debit_category] + suffix] += amount
+
+        if credit_category in category_mapping:
+            asset_data[category_mapping[credit_category] + suffix] -= amount
 
     # Calculate totals
     asset_data['B_total_noncurrent_assets_current'] = (
@@ -344,6 +327,7 @@ def calculate_asset_data(transactions):
 
 
 
+
 def calculate_liability_data(transactions):
     # Initialize the liability_data dictionary
     liability_data = {
@@ -383,63 +367,43 @@ def calculate_liability_data(transactions):
     current_year = datetime.now().year
     previous_year = current_year - 1
 
-    # Group transactions by category and year
+    # Map liability categories to the liability_data keys (normalized to lowercase)
+    category_mapping = {
+        "issued capital": "A_issued_capital",
+        "share premiums": "A_share_premiums",
+        "revaluation reserve": "A_revaluation_reserve",
+        "reserves": "A_reserves",
+        "retained earnings": "A_retained_earnings",
+        "current profit/loss": "A_current_profit_loss",
+        "provisions": "B_provisions",
+        "liabilities under one year": "C_liabilities_one_year",
+        "liabilities over one year": "C_liabilities_over_one_year",
+        "deferred income": "D_deferred_income",
+        "liabilities debit": "liabilities_debit",
+        "liabilities credit": "liabilities_credit",
+    }
+
+    # Iterate over transactions
     for transaction in transactions:
         year = transaction.date.year
-        category = transaction.category
+        debit_category = transaction.debit.lower() if transaction.debit else ""
+        credit_category = transaction.credit.lower() if transaction.credit else ""
         amount = transaction.amount
 
+        # Determine the prefix (current or previous)
         if year == current_year:
-            if category == "Issued Capital":
-                liability_data['A_issued_capital_current'] += amount
-            elif category == "Share Premiums":
-                liability_data['A_share_premiums_current'] += amount
-            elif category == "Revaluation Reserve":
-                liability_data['A_revaluation_reserve_current'] += amount
-            elif category == "Reserves":
-                liability_data['A_reserves_current'] += amount
-            elif category == "Retained Earnings":
-                liability_data['A_retained_earnings_current'] += amount
-            elif category == "Current Profit/Loss":
-                liability_data['A_current_profit_loss_current'] += amount
-            elif category == "Provisions":
-                liability_data['B_provisions_current'] += amount
-            elif category == "Liabilities Under One Year":
-                liability_data['C_liabilities_one_year_current'] += amount
-            elif category == "Liabilities Over One Year":
-                liability_data['C_liabilities_over_one_year_current'] += amount
-            elif category == "Deferred Income":
-                liability_data['D_deferred_income_current'] += amount
-            elif category == "Liabilities Debit":
-                liability_data['liabilities_debit_total'] += amount
-            elif category == "Liabilities Credit":
-                liability_data['liabilities_credit_total'] += amount
-
+            suffix = "_current"
         elif year == previous_year:
-            if category == "Issued Capital":
-                liability_data['A_issued_capital_previous'] += amount
-            elif category == "Share Premiums":
-                liability_data['A_share_premiums_previous'] += amount
-            elif category == "Revaluation Reserve":
-                liability_data['A_revaluation_reserve_previous'] += amount
-            elif category == "Reserves":
-                liability_data['A_reserves_previous'] += amount
-            elif category == "Retained Earnings":
-                liability_data['A_retained_earnings_previous'] += amount
-            elif category == "Current Profit/Loss":
-                liability_data['A_current_profit_loss_previous'] += amount
-            elif category == "Provisions":
-                liability_data['B_provisions_previous'] += amount
-            elif category == "Liabilities Under One Year":
-                liability_data['C_liabilities_one_year_previous'] += amount
-            elif category == "Liabilities Over One Year":
-                liability_data['C_liabilities_over_one_year_previous'] += amount
-            elif category == "Deferred Income":
-                liability_data['D_deferred_income_previous'] += amount
-            elif category == "Liabilities Debit":
-                liability_data['liabilities_debit_previous'] += amount
-            elif category == "Liabilities Credit":
-                liability_data['liabilities_credit_previous'] += amount
+            suffix = "_previous"
+        else:
+            continue  # Skip transactions that don't fall in the current or previous year
+
+        # Add the amount to the respective debit or credit category
+        if debit_category in category_mapping:
+            liability_data[category_mapping[debit_category] + suffix] += amount
+
+        if credit_category in category_mapping:
+            liability_data[category_mapping[credit_category] + suffix] -= amount
 
     # Calculate totals
     liability_data['A_total_equity_current'] = (
@@ -473,13 +437,7 @@ def calculate_liability_data(transactions):
         liability_data['D_deferred_income_previous']
     )
 
-    
-
     return liability_data
-
-
-
-
 
 
 def export_income_expense_pdf():
@@ -738,17 +696,17 @@ def export_balance_sheet_pdf():
     debit_total = 0.0
     credit_total = 0.0
 
-    # Calculate totals based on `is_credit` and validate categories
+    # Calculate totals based on `credit` and validate categories
     for transaction in transactions:
         category_name = transaction.category
-        transaction_type = 'income' if transaction.is_credit else 'expense'
+        transaction_type = 'income' if transaction.credit else 'expense'
 
         # Skip the transaction if the category is invalid
         if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
             continue
 
         # Add to the appropriate total
-        if transaction.is_credit:
+        if transaction.credit:
             credit_total += transaction.amount
         else:
             debit_total += transaction.amount
@@ -882,17 +840,17 @@ def export_balance_sheet_word():
     # debit_total = 0.0
     # credit_total = 0.0
 
-    # # Calculate totals based on `is_credit` and validate categories
+    # # Calculate totals based on `credit` and validate categories
     # for transaction in transactions:
     #     category_name = transaction.category
-    #     transaction_type = 'income' if transaction.is_credit else 'expense'
+    #     transaction_type = 'income' if transaction.credit else 'expense'
 
     #     # Skip the transaction if the category is invalid
     #     if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
     #         continue
 
     #     # Add to the appropriate total
-    #     if transaction.is_credit:
+    #     if transaction.credit:
     #         credit_total += transaction.amount
     #     else:
     #         debit_total += transaction.amount
@@ -1017,9 +975,9 @@ def export_balance_sheet_excel():
     #     cell.font = Font(bold=True)
     #     cell.alignment = Alignment(horizontal="center")
 
-    # # Calculate totals based on `is_credit`
-    # debit_total = sum(t.amount for t in transactions if not t.is_credit)
-    # credit_total = sum(t.amount for t in transactions if t.is_credit)
+    # # Calculate totals based on `credit`
+    # debit_total = sum(t.amount for t in transactions if not t.credit)
+    # credit_total = sum(t.amount for t in transactions if t.credit)
     # summary_data = [
     #     ["Debit Total", debit_total],
     #     ["Credit Total", credit_total],

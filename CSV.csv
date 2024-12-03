@@ -1,4 +1,4 @@
-date,type,category,is_credit,income_statement_category,amount,description
+date,type,category,credit,income_statement_category,amount,description
 2024-01-15,income,Intangible Assets,True,Net sales revenue,5000,Monthly salary
 2024-01-16,expense,groceries,,Other expenses,150,Walmart purchase
 2024-01-17,expense,Issued Capital,True,Other expenses,1200,Monthly rent payment

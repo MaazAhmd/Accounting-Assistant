@@ -51,9 +51,9 @@
 
       <!-- Is Credit Field -->
       <div class="mb-3">
-        <label for="is_credit" class="form-label"><i class="fas fa-check-circle"></i> Is Credit?</label>
-        {{ form.is_credit(class_='form-check-input', id='is_credit') }}
-        {% for error in form.is_credit.errors %}
+        <label for="credit" class="form-label"><i class="fas fa-check-circle"></i> Is Credit?</label>
+        {{ form.credit(class_='form-check-input', id='credit') }}
+        {% for error in form.credit.errors %}
         <div class="text-danger">{{ error }}</div>
         {% endfor %}
       </div>

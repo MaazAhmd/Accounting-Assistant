@@ -28,7 +28,7 @@ def add_transaction_manual():
                 date=form.date.data,
                 type=form.type.data,
                 category=form.category.data,
-                is_credit=form.is_credit.data,
+                credit=form.credit.data,
                 income_statement_category=form.income_statement_category.data if form.income_statement_category.data else None,
                 amount=form.amount.data,
                 description=form.description.data,
@@ -44,7 +44,6 @@ def add_transaction_manual():
             db.session.rollback()
             flash(f'Error adding the transaction. Please try again. {e}')
     return render_template('add_transaction_manual.html', form=form)
-
 
 
 @transaction.route('/add_transaction_file', methods=['GET', 'POST'])
@@ -69,18 +68,15 @@ def add_transaction_file():
                         for index, row in data.iterrows():
                             print(f"Adding transaction from row {index}: {row}")
                             date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
-                            if( row.get('is_credit')==True):
-                                is_credit = True
-                            else:
-                                 is_credit=False
+                     
 
                             transaction = Transaction(
                                 date=date_obj,
                                 type=row['type'],
                                 category=row['category'],
-                                is_credit=is_credit,
-
-                                income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
+                                debit = str(row.get('Debit', '')).strip() if pd.notna(row.get('Debit')) else None,
+                                credit = str(row.get('Credit', '')).strip() if pd.notna(row.get('Credit')) else None,
+                                income_statement_category=row.get('Income Statement', None),  # Default to None if missing
                                 amount=row['amount'],
                                 description=row['description'],
                                 account_id=current_user.accounts[0].id,
@@ -101,18 +97,14 @@ def add_transaction_file():
 
                         for index, row in data.iterrows():
                             print(f"Adding transaction from row {index}: {row}")
-                            date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
-                            if( row.get('is_credit')==True):
-                                is_credit = True
-                            else:
-                                 is_credit=False
+                      
                             transaction = Transaction(
-                                date=date_obj,
+                                date=row['date'],
                                 type=row['type'],
                                 category=row['category'],
-                                is_credit=is_credit,
-
-                                income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
+                                debit = str(row.get('Debit', '')).strip() if pd.notna(row.get('Debit')) else None,
+                                credit = str(row.get('Credit', '')).strip() if pd.notna(row.get('Credit')) else None,
+                                income_statement_category=str(row.get('Income Statement', '')).strip() if pd.notna(row.get('Income Statement')) else None,
                                 amount=row['amount'],
                                 description=row['description'],
                                 account_id=current_user.accounts[0].id,
@@ -134,20 +126,20 @@ def add_transaction_file():
                             if paragraph.text:
                                 fields = paragraph.text.split(',')
                                 date_obj = datetime.strptime(fields[0].strip(), '%Y-%m-%d').date()
-                                if len(fields) == 7:  # Updated to expect all 7 fields in the paragraph
-                                    print(f"Adding transaction from paragraph: {fields}")
-                                    transaction = Transaction(
+                                print(f"Adding transaction from paragraph: {fields}")
+                                transaction = Transaction(
                                         date=date_obj,
                                         type=fields[1],
                                         category=fields[2],
-                                        is_credit=fields[3].lower() == 'true',  # Convert 'is_credit' field to boolean
+                                        debit=fields[3].strip() or None,  # Debit field
+                                        credit=fields[4].strip() or None,  # Credit field
                                         income_statement_category=fields[4] if fields[4] else None,
                                         amount=float(fields[5]),
                                         description=fields[6],
                                         account_id=current_user.accounts[0].id,
                                         user_id=current_user.id
                                     )
-                                    db.session.add(transaction)
+                                db.session.add(transaction)
                         db.session.commit()
                         print("Word document processed successfully!")
                         flash('File processed successfully!')
@@ -193,7 +185,7 @@ def add_transaction_file():
 #                                 date=row['date'],
 #                                 type=row['type'],
 #                                 category=row['category'],
-#                                 is_credit=row.get('is_credit', False),  # Default to False if 'is_credit' is missing
+#                                 credit=row.get('credit', False),  # Default to False if 'credit' is missing
 #                                 income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
 #                                 amount=row['amount'],
 #                                 description=row['description'],
@@ -218,7 +210,7 @@ def add_transaction_file():
 #                                 date=row['date'],
 #                                 type=row['type'],
 #                                 category=row['category'],
-#                                 is_credit=row.get('is_credit', False),  # Default to False if 'is_credit' is missing
+#                                 credit=row.get('credit', False),  # Default to False if 'credit' is missing
 #                                 income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
 #                                 amount=row['amount'],
 #                                 description=row['description'],
@@ -245,7 +237,7 @@ def add_transaction_file():
 #                                         date=fields[0],
 #                                         type=fields[1],
 #                                         category=fields[2],
-#                                         is_credit=fields[3].lower() == 'true',  # Convert 'is_credit' field to boolean
+#                                         credit=fields[3].lower() == 'true',  # Convert 'credit' field to boolean
 #                                         income_statement_category=fields[4] if fields[4] else None,
 #                                         amount=float(fields[5]),
 #                                         description=fields[6],
@@ -276,7 +268,7 @@ def add_transaction_file():
 #                     date=form.date.data,
 #                     type=form.type.data,
 #                     category=form.category.data,
-#                     is_credit=form.is_credit.data,
+#                     credit=form.credit.data,
 #                     income_statement_category=form.income_statement_category.data if form.income_statement_category.data else автоматично_дефинирана_категория(), # тук добавяме логиката
 #                     amount=form.amount.data,
 #                     description=form.description.data,
@@ -323,7 +315,7 @@ def generate_general_ledger():
         if category not in general_ledger:
             general_ledger[category] = {'debit': 0, 'credit': 0}
 
-        if t.is_credit:
+        if t.credit:
             general_ledger[category]['credit'] += t.amount
         else:
             general_ledger[category]['debit'] += t.amount

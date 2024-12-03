@@ -203,17 +203,15 @@ def balance_sheet():
     debit_total = 0.0
     credit_total = 0.0
 
-    # Calculate totals based on `is_credit` and validate categories
     for transaction in transactions:
         category_name = transaction.category
-        transaction_type = 'income' if transaction.is_credit else 'expense'
+        transaction_type = 'income' if transaction.credit else 'expense'
 
         # Skip the transaction if the category is invalid
         if category_name not in valid_categories or valid_categories[category_name] != transaction_type:
             continue
-        print(transaction.amount, transaction.is_credit, transaction.category, transaction_type, valid_categories[category_name])
         # Add to the appropriate total
-        if transaction.is_credit:
+        if transaction.credit:
             credit_total += transaction.amount
         else:
             debit_total += transaction.amount

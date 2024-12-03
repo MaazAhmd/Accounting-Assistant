@@ -39,13 +39,13 @@ class Transaction(db.Model):
     date = db.Column(db.Date, nullable=False, default=date.today)
     type = db.Column(db.String(10), nullable=False)  # 'income' or 'expense'
     category = db.Column(db.String(50), nullable=False)
-    income_statement_category = db.Column(db.String(100), nullable=False)  # Категория в ОПР (напр. 'Personnel expenses')
+    income_statement_category = db.Column(db.String(100), nullable=True)  # Категория в ОПР (напр. 'Personnel expenses')
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200), nullable=True)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    is_credit = db.Column(db.Boolean, nullable=True, default=False)  # True for credit, False for debit
-
+    debit = db.Column(db.String(100), nullable=True)  # New field for debit category
+    credit = db.Column(db.String(100), nullable=True) 
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -59,3 +59,4 @@ class Category(db.Model):
         if amount < 0:
             raise ValueError(_('Amount must be a positive number.'))
         return amount
+

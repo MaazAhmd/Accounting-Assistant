@@ -57,7 +57,7 @@ def upgrade():
     sa.Column('description', sa.String(length=200), nullable=True),
     sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('is_credit', sa.Boolean(), nullable=True),
+    sa.Column('credit', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['account.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
