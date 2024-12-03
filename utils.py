@@ -379,6 +379,7 @@ def calculate_liability_data(transactions):
         "liabilities under one year": "C_liabilities_one_year",
         "liabilities over one year": "C_liabilities_over_one_year",
         "deferred income": "D_deferred_income",
+        "deffered income": "D_deferred_income",
         "liabilities debit": "liabilities_debit",
         "liabilities credit": "liabilities_credit",
     }
