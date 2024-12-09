@@ -52,7 +52,6 @@ def seed_categories():
     print("Categories seeded successfully.")
 
 
-
 def автоматично_дефинирана_категория(transaction_description):
     # Проста логика за определяне на категорията на база описание
     if "заплата, salary" in transaction_description.lower() or "персонал, staff" in transaction_description.lower():
@@ -115,36 +114,40 @@ def calculate_income_expense_data(transactions):
         amount = transaction.amount
 
         if year == current_year:
-            if category == "Raw materials, supplies, and external services expenses":
+            category_lower = category.lower()  # Normalize to lowercase
+            print(category_lower)
+            if category_lower == "raw materials, supplies, and external services expenses":
                 income_expense_data["_3_raw_material_expenses_current"] += amount
-            elif category == "Personnel expenses":
+            elif category_lower == "personnel expenses":
                 income_expense_data["_4_personnel_expenses_current"] += amount
-            elif category == "Depreciation and amortization expenses":
+            elif category_lower == "depreciation expenses":
                 income_expense_data["_5_depreciation_expenses_current"] += amount
-            elif category == "Other expenses":
+            elif category_lower == "other expenses":
                 income_expense_data["_6_other_expenses_current"] += amount
-            elif category == "Tax expenses":
+            elif category_lower == "tax expenses":
                 income_expense_data["_7_tax_expenses_current"] += amount
-            elif category == "Net sales revenue":
+            elif category_lower == "net sales revenue":
                 income_expense_data["_1_net_sales_revenue_current"] += amount
-            elif category == "Other revenue":
+            elif category_lower == "other revenue":
                 income_expense_data["_2_other_revenue_current"] += amount
 
         elif year == previous_year:
-            if category == "Raw materials, supplies, and external services expenses":
+            category_lower = category.lower()  # Normalize to lowercase
+            if category_lower == "raw materials, supplies, and external services expenses":
                 income_expense_data["_3_raw_material_expenses_previous"] += amount
-            elif category == "Personnel expenses":
+            elif category_lower == "personnel expenses":
                 income_expense_data["_4_personnel_expenses_previous"] += amount
-            elif category == "Depreciation and amortization expenses":
+            elif category_lower == "depreciation expenses":
                 income_expense_data["_5_depreciation_expenses_previous"] += amount
-            elif category == "Other expenses":
+            elif category_lower == "other expenses":
                 income_expense_data["_6_other_expenses_previous"] += amount
-            elif category == "Tax expenses":
+            elif category_lower == "tax expenses":
                 income_expense_data["_7_tax_expenses_previous"] += amount
-            elif category == "Net sales revenue":
+            elif category_lower == "net sales revenue":
                 income_expense_data["_1_net_sales_revenue_previous"] += amount
-            elif category == "Other revenue":
+            elif category_lower == "other revenue":
                 income_expense_data["_2_other_revenue_previous"] += amount
+
 
     income_expense_data["_total_expenses_current"] = (
         income_expense_data["_3_raw_material_expenses_current"] +
@@ -248,9 +251,9 @@ def calculate_asset_data(transactions):
 
     # Map balance sheet categories to the asset_data keys (normalized to lowercase)
     category_mapping = {
-        "unpaid capital": "A_asset_unpaid_capital",
+        "subscribed but unpaid capital": "A_asset_unpaid_capital",
         "intangible assets": "B_intangible_assets",
-        "fixed assets": "B_fixed_assets",
+        "property, plant, and equipment": "B_fixed_assets",
         "long-term financial assets": "B_long_term_financial_assets",
         "deferred taxes": "B_deferred_taxes",
         "inventory": "C_inventory",
@@ -281,7 +284,7 @@ def calculate_asset_data(transactions):
             asset_data[category_mapping[debit_category] + suffix] += amount
 
         if credit_category in category_mapping:
-            asset_data[category_mapping[credit_category] + suffix] -= amount
+            asset_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     asset_data['B_total_noncurrent_assets_current'] = (
@@ -363,6 +366,7 @@ def calculate_liability_data(transactions):
         'liabilities_debit_previous': 0,
     }
 
+
     # Get the current and previous year
     current_year = datetime.now().year
     previous_year = current_year - 1
@@ -404,7 +408,7 @@ def calculate_liability_data(transactions):
             liability_data[category_mapping[debit_category] + suffix] += amount
 
         if credit_category in category_mapping:
-            liability_data[category_mapping[credit_category] + suffix] -= amount
+            liability_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     liability_data['A_total_equity_current'] = (
@@ -1025,7 +1029,6 @@ def export_balance_sheet_excel():
 #     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 #                      as_attachment=True, download_name='Income_Expense_Report.xlsx')
 
-    
 
 # def export_to_pdf(transactions):
 #     # Generate PDF using matplotlib or reportlab

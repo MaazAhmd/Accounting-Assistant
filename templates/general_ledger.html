@@ -4,28 +4,52 @@
 
 {% block content %}
 <h1>General Ledger</h1>
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('transactions_blueprint.export_general_ledger_excel') }}" class="btn btn-success me-2">
+        Export to Excel
+    </a>
+    <a href="{{ url_for('transactions_blueprint.export_general_ledger_pdf') }}" class="btn btn-danger">
+        Export to PDF
+    </a>
+</div>
+
+{% if transactions %}
 <table class="table table-bordered table-hover">
     <thead>
         <tr>
+            <th>Date</th>
+            <th>Type</th>
             <th>Category</th>
-            <th>Total Debit</th>
-            <th>Total Credit</th>
+            <th>Amount</th>
+
+            <th>Debit</th>
+            <th>Credit</th>
+            <th>Description</th>
         </tr>
     </thead>
     <tbody>
-        {% for category, amounts in general_ledger.items() %}
+        {% for t in transactions %}
         <tr>
-            <td>{{ category }}</td>
-            <td>{{ amounts.debit }}</td>
-            <td>{{ amounts.credit }}</td>
+            <td>{{ t.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ 'Income' if t.type == 'income' else 'Expense' }}</td>
+
+            <td>{{ t.category }}</td>
+            <td>{{ t.amount }}</td>
+            <td>{{ t.debit or 'N/A' }}</td> <!-- Display debit value -->
+            <td>{{ t.credit or 'N/A' }}</td> <!-- Display credit value -->
+            <td>{{ t.description }}</td>
+         
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% else %}
+<p>You have no transactions recorded.</p>
+{% endif %}
 
 <!-- Back to Transactions Button -->
 <div class="text-center mt-4">
-    <a href="{{ url_for('transactions_blueprint.view_user_transactions') }}" class="btn btn-secondary">
+    <a href="{{ url_for('transactions_blueprint.view_user_transactions') }}" class="btn btn-secondary mb-5">
         <i class="fas fa-arrow-left"></i> Back to Transactions
     </a>
 </div>

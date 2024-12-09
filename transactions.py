@@ -6,6 +6,13 @@ from forms import ManualTransactionForm, FileUploadForm
 from models import db, Transaction
 from utils import export_balance_sheet_excel, export_balance_sheet_pdf, export_balance_sheet_word, export_income_expense_pdf, recalculate_totals, автоматично_дефинирана_категория, export_income_expense_word, export_income_expense_excel
 import logging
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+import io
+
+
 
 transaction = Blueprint('transactions_blueprint', 'transaction')
 
@@ -158,140 +165,6 @@ def add_transaction_file():
     return render_template('add_transaction_file.html', form=form)
 
 
-# @transaction.route('/add_transaction', methods=['GET', 'POST'])
-# @login_required
-# @roles_required('owner', 'admin')
-# def add_transaction():
-
-#     form = TransactionForm()
-#     if form.validate_on_submit():
-#         print(form.date.data, form.amount.data, form.type.data, form.category.data,"")
-#         uploaded_file = request.files['file']
-#         if uploaded_file.filename.strip() != '':
-#             uploaded_file = request.files['file']
-#             print(f"File uploaded: {uploaded_file.filename}")
-#             logging.debug(f"File uploaded: {uploaded_file.filename}")
-#             if uploaded_file.filename != '':
-#                 try:
-#                     # Processing CSV files
-#                     if uploaded_file.filename.endswith('.csv'):
-#                         print("Processing CSV file.")
-#                         logging.debug("Processing CSV file.")
-#                         import pandas as pd
-#                         data = pd.read_csv(uploaded_file)
-#                         for index, row in data.iterrows():
-#                             print(f"Adding transaction from row {index}: {row}")
-#                             transaction = Transaction(
-#                                 date=row['date'],
-#                                 type=row['type'],
-#                                 category=row['category'],
-#                                 credit=row.get('credit', False),  # Default to False if 'credit' is missing
-#                                 income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
-#                                 amount=row['amount'],
-#                                 description=row['description'],
-#                                 account_id=current_user.accounts[0].id,
-#                                 user_id=current_user.id
-#                             )
-#                             db.session.add(transaction)
-#                         db.session.commit()
-#                         print("CSV file processed successfully!")
-#                         flash('File processed successfully!')
-#                         logging.info("CSV file processed successfully.")
-
-
-#                     elif uploaded_file.filename.endswith(('.xls', '.xlsx')):
-#                         print("Processing Excel file.")
-#                         logging.debug("Processing Excel file.")
-#                         import pandas as pd
-#                         data = pd.read_excel(uploaded_file)
-#                         for index, row in data.iterrows():
-#                             print(f"Adding transaction from row {index}: {row}")
-#                             transaction = Transaction(
-#                                 date=row['date'],
-#                                 type=row['type'],
-#                                 category=row['category'],
-#                                 credit=row.get('credit', False),  # Default to False if 'credit' is missing
-#                                 income_statement_category=row.get('income_statement_category', None),  # Default to None if missing
-#                                 amount=row['amount'],
-#                                 description=row['description'],
-#                                 account_id=current_user.accounts[0].id,
-#                                 user_id=current_user.id
-#                             )
-#                             db.session.add(transaction)
-#                         db.session.commit()
-#                         print("Excel file processed successfully!")
-#                         flash('File processed successfully!')
-#                         logging.info("Excel file processed successfully.")
-
-#                     elif uploaded_file.filename.endswith(('.doc', '.docx')):
-#                         print("Processing Word document.")
-#                         logging.debug("Processing Word document.")
-#                         from docx import Document
-#                         document = Document(uploaded_file)
-#                         for paragraph in document.paragraphs:
-#                             if paragraph.text:
-#                                 fields = paragraph.text.split(',')
-#                                 if len(fields) == 7:  # Updated to expect all 7 fields in the paragraph
-#                                     print(f"Adding transaction from paragraph: {fields}")
-#                                     transaction = Transaction(
-#                                         date=fields[0],
-#                                         type=fields[1],
-#                                         category=fields[2],
-#                                         credit=fields[3].lower() == 'true',  # Convert 'credit' field to boolean
-#                                         income_statement_category=fields[4] if fields[4] else None,
-#                                         amount=float(fields[5]),
-#                                         description=fields[6],
-#                                         account_id=current_user.accounts[0].id,
-#                                         user_id=current_user.id
-#                                     )
-#                                     db.session.add(transaction)
-#                         db.session.commit()
-#                         print("Word document processed successfully!")
-#                         flash('File processed successfully!')
-#                         logging.info("Word document processed successfully.")
-
-
-#                     else:
-#                         flash('Unsupported file format. Please upload a CSV, Excel, or Word file.')
-#                         logging.warning(f"Unsupported file format: {uploaded_file.filename}")
-#                     return redirect(url_for('standard_dashboard'))
-
-#                 except Exception as e:
-#                     db.session.rollback()
-#                     flash('Error processing the file: ' + str(e))
-#                     logging.error(f"Error processing the file: {e}")
-#         elif form.date.data and form.amount.data and form.type.data and form.category.data:
-#             print("Adding transaction manually.")	
-#             try:
-#                 account = current_user.accounts[0]
-#                 transaction = Transaction(
-#                     date=form.date.data,
-#                     type=form.type.data,
-#                     category=form.category.data,
-#                     credit=form.credit.data,
-#                     income_statement_category=form.income_statement_category.data if form.income_statement_category.data else автоматично_дефинирана_категория(), # тук добавяме логиката
-#                     amount=form.amount.data,
-#                     description=form.description.data,
-#                     account_id=account.id,
-#                     user_id=current_user.id  
-#                 )
-#                 db.session.add(transaction)
-#                 db.session.commit()
-#                 recalculate_totals()
-#                 flash('Transaction added successfully!')
-#                 logging.info("Transaction added successfully manually.")
-#                 print("Calling the function before render_template for 'standard_dashboard.html'")
-#                 return redirect(url_for('standard_dashboard'))
-#             except Exception as e:
-#                 db.session.rollback()
-#                 flash('Error adding the transaction. Please try again. ' + str(e))
-#                 logging.error(f"Error adding the transaction: {e}")
-#                 print("Calling the function before render_template for 'add_transaction.html'")
-#     else:
-#         print(f"Form validation errors: {form.errors}")
-#         print(f"Form validation errors: {form.errors}")
-
-#     return render_template('add_transaction.html', form=form)
 
 
 # Предишни рутове за транзакции
@@ -325,7 +198,6 @@ def generate_general_ledger():
         general_ledger=general_ledger,
         transactions=transactions
     )
-
 
 # Тук добави новия рут за изтриване на транзакция
 @transaction.route('/delete_transaction/<int:transaction_id>', methods=['POST'])
@@ -374,3 +246,107 @@ def export_balance_sheet():
         return export_balance_sheet_excel()
     else:
         return "Invalid export type", 400
+    
+
+
+
+
+from flask import send_file, Response
+from io import BytesIO
+import pandas as pd
+
+# Route for exporting to Excel
+@transaction.route('/export_general_ledger_excel', methods=['GET'])
+@login_required
+def export_general_ledger_excel():
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+    
+    # Create a DataFrame for the transactions
+    data = [
+        {
+            'Date': t.date.strftime('%Y-%m-%d'),
+            'Type': 'Income' if t.type == 'income' else 'Expense',
+            'Category': t.category,
+            'Amount': t.amount,
+            'Debit': t.debit if t.debit else 'N/A',
+            'Credit': t.credit if t.credit else 'N/A',
+            'Description': t.description
+        }
+        for t in transactions
+    ]
+    df = pd.DataFrame(data)
+
+    # Save to an Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='General Ledger')
+    output.seek(0)
+
+    # Serve the file
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True, download_name='general_ledger.xlsx')
+
+@transaction.route('/export_general_ledger_pdf', methods=['GET'])
+@login_required
+def export_general_ledger_pdf():
+    transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
+    # Prepare the PDF buffer
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    normal_style = styles["Normal"]
+    table_header_style = styles["Heading4"]
+
+    # Add Title
+    elements.append(Paragraph("General Ledger", title_style))
+    elements.append(Spacer(1, 12))
+
+    # Prepare table data
+    table_data = [
+        ["Date", "Type", "Category", "Amount", "Debit", "Credit", "Description"]
+    ]
+
+    # Truncate long text fields to avoid overflow
+    def truncate_text(text, max_length):
+        return text if len(text) <= max_length else text[:max_length - 3] + "..."
+
+    # Add transactions to table
+    for t in transactions:
+        table_data.append([
+            t.date.strftime('%Y-%m-%d'),
+            "Income" if t.type == "income" else "Expense",
+            truncate_text(t.category, 15),  # Limit category to 15 characters
+            f"{t.amount:.2f}",
+            truncate_text(t.debit, 20) if t.debit else "N/A",
+            truncate_text(t.credit, 20) if t.credit else "N/A",
+            truncate_text(t.description or "N/A", 30)  # Limit description to 30 characters
+        ])
+
+    # Adjust column widths
+    table = Table(table_data, colWidths=[50, 35, 80, 50, 100, 100, 140])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),  # Reduce font size to fit content
+    ]))
+
+    # Add table to the PDF
+    elements.append(table)
+
+    # Build PDF
+    doc.build(elements)
+
+    # Serve the PDF
+    buffer.seek(0)
+    return send_file(buffer, mimetype='application/pdf',
+                     as_attachment=True, download_name='general_ledger.pdf')
