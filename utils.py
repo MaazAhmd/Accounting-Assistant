@@ -114,7 +114,10 @@ def calculate_income_expense_data(transactions):
         amount = transaction.amount
 
         if year == current_year:
-            category_lower = category.lower()  # Normalize to lowercase
+            if category:
+                category_lower = category.lower()  # Normalize to lowercase
+            else:
+                category_lower = ""
             print(category_lower)
             if category_lower == "raw materials, supplies, and external services expenses":
                 income_expense_data["_3_raw_material_expenses_current"] += amount
