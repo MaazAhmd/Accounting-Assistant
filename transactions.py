@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @transaction.route('/add_transaction_manual', methods=['GET', 'POST'])
 @login_required
-@roles_required('owner', 'admin')
+# @roles_required('owner', 'admin')
 def add_transaction_manual():
     form = ManualTransactionForm()  # Use a form specific to manual transactions
     if form.validate_on_submit():
@@ -55,7 +55,7 @@ def add_transaction_manual():
 
 @transaction.route('/add_transaction_file', methods=['GET', 'POST'])
 @login_required
-@roles_required('owner', 'admin')
+# @roles_required('owner', 'admin')
 def add_transaction_file():
     form = FileUploadForm()  # Use a form specific to file uploads
     if form.validate_on_submit():

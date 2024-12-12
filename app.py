@@ -267,7 +267,7 @@ def generate_report():
 
 @app.route('/account_transactions_overview')
 @login_required
-@roles_required('owner', 'admin', 'user')
+# @roles_required('owner', 'admin', 'user')
 def view_account_transactions():
     account = current_user.accounts[0]
     transactions = Transaction.query.filter_by(account_id=account.id).order_by(Transaction.date.desc()).all()

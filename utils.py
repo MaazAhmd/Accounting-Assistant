@@ -112,12 +112,23 @@ def calculate_income_expense_data(transactions):
         year = transaction.date.year
         category = transaction.income_statement_category
         amount = transaction.amount
+        transaction_category = transaction.category
+        type = transaction.type
 
         if year == current_year:
             if category:
                 category_lower = category.lower()  # Normalize to lowercase
             else:
                 category_lower = ""
+                
+            if transaction_category:
+                transaction_category_lower = transaction_category.lower()
+            else:
+                transaction_category_lower = ""
+                
+            if type:
+                type = type.lower()
+                
             print(category_lower)
             if category_lower == "raw materials, supplies, and external services expenses":
                 income_expense_data["_3_raw_material_expenses_current"] += amount
@@ -133,6 +144,23 @@ def calculate_income_expense_data(transactions):
                 income_expense_data["_1_net_sales_revenue_current"] += amount
             elif category_lower == "other revenue":
                 income_expense_data["_2_other_revenue_current"] += amount
+            elif category_lower == "":
+                if not (transaction.credit and ('liabilities over 1 year' in transaction.credit.lower() or 'liabilities over one year' in transaction.credit.lower()
+                    or ('shareholder' in transaction.credit.lower() and 'equity' in transaction.credit.lower())
+                    or ('revaluation' in transaction.credit.lower() and 'reserve' in transaction.credit.lower())
+                    or ('share' in transaction.credit.lower() and 'premium' in transaction.credit.lower())
+                    or ('retained' in transaction.credit.lower() and 'earning' in transaction.credit.lower())
+                    or ('provisions' in transaction.credit.lower() or 'similar obligations' in transaction.credit.lower()))):
+                    
+                    if not (transaction.debit and ('assets' in transaction.debit.lower() or 'cash' in transaction.debit.lower())):
+                        if type == 'income':
+                            print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other revenue".')
+                            income_expense_data["_2_other_revenue_current"] += amount
+                        elif type == 'expense':
+                            print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other expenses".')
+                            income_expense_data["_6_other_expenses_current"] += amount
+                
+                
 
         elif year == previous_year:
             category_lower = category.lower()  # Normalize to lowercase
