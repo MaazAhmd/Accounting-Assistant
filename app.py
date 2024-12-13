@@ -216,12 +216,8 @@ def balance_sheet():
         else:
             debit_total += transaction.amount
 
-    # Data validation checks for both assets and liabilities
-    for key, value in {**asset_data, **liability_data}.items():
-        if isinstance(value, (int, float)) and value < 0:
-            flash(f"Invalid data: {key} cannot be negative.", 'error')
+
             
-            print("Calling function before rendering 'balance_sheet_combined.html'")
     return render_template('balance_sheet_combined.html', assets=asset_data, liabilities=liability_data, debit_total=debit_total,
         credit_total=credit_total)
 
@@ -232,13 +228,8 @@ def income_expense_statement():
     transactions = Transaction.query.filter_by(account_id=current_user.accounts[0].id).all()
     income_expense_data = calculate_income_expense_data(transactions)
 
-    # Data validation checks
-    for key, value in income_expense_data.items():
-        if isinstance(value, (int, float)) and value < 0:
-            flash(f"Invalid data: {key} cannot be negative.", 'error')
-
-            print("Calling function before rendering 'income_expense_statement.html'")
-        return render_template('income_expense_statement.html', **income_expense_data)
+ 
+    return render_template('income_expense_statement.html', **income_expense_data)
 
 
 @app.route('/generate_report', methods=['GET'])
