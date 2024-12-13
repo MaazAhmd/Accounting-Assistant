@@ -216,7 +216,6 @@ def balance_sheet():
         else:
             debit_total += transaction.amount
 
-
             
     return render_template('balance_sheet_combined.html', assets=asset_data, liabilities=liability_data, debit_total=debit_total,
         credit_total=credit_total)
