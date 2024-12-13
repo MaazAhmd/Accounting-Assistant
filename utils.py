@@ -315,7 +315,10 @@ def calculate_asset_data(transactions):
             asset_data[category_mapping[debit_category] + suffix] += amount
 
         if credit_category in category_mapping:
-            asset_data[category_mapping[credit_category] + suffix] += amount
+            if credit_category=="cash":
+                asset_data[category_mapping[credit_category] + suffix] -= amount
+            else:
+                asset_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     asset_data['B_total_noncurrent_assets_current'] = (
@@ -436,10 +439,14 @@ def calculate_liability_data(transactions):
 
         # Add the amount to the respective debit or credit category
         if debit_category in category_mapping:
+                
             liability_data[category_mapping[debit_category] + suffix] += amount
 
         if credit_category in category_mapping:
-            liability_data[category_mapping[credit_category] + suffix] += amount
+            if credit_category=="cash":
+                liability_data[category_mapping[credit_category] + suffix] -= amount
+            else:
+                liability_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     liability_data['A_total_equity_current'] = (
