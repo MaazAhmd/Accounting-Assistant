@@ -144,21 +144,22 @@ def calculate_income_expense_data(transactions):
                 income_expense_data["_1_net_sales_revenue_current"] += amount
             elif category_lower == "other revenue":
                 income_expense_data["_2_other_revenue_current"] += amount
-            elif category_lower == "":
-                if not (transaction.credit and ('liabilities over 1 year' in transaction.credit.lower() or 'liabilities over one year' in transaction.credit.lower()
-                    or ('shareholder' in transaction.credit.lower() and 'equity' in transaction.credit.lower())
-                    or ('revaluation' in transaction.credit.lower() and 'reserve' in transaction.credit.lower())
-                    or ('share' in transaction.credit.lower() and 'premium' in transaction.credit.lower())
-                    or ('retained' in transaction.credit.lower() and 'earning' in transaction.credit.lower())
-                    or ('provisions' in transaction.credit.lower() or 'similar obligations' in transaction.credit.lower()))):
+            # elif category_lower == "":
+            #     if not (transaction.credit and ('liabilities over 1 year' in transaction.credit.lower() or 'liabilities over one year' in transaction.credit.lower()
+            #         or ('shareholder' in transaction.credit.lower() and 'equity' in transaction.credit.lower())
+            #         or ('revaluation' in transaction.credit.lower() and 'reserve' in transaction.credit.lower())
+            #         or ('share' in transaction.credit.lower() and 'premium' in transaction.credit.lower())
+            #         or ('retained' in transaction.credit.lower() and 'earning' in transaction.credit.lower())
+            #         or ('issued' in transaction.credit.lower() and 'capital' in transaction.credit.lower())
+            #         or ('provisions' in transaction.credit.lower() or 'similar obligations' in transaction.credit.lower()))):
                     
-                    if not (transaction.debit and ('assets' in transaction.debit.lower() or 'cash' in transaction.debit.lower())):
-                        if type == 'income':
-                            print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other revenue".')
-                            income_expense_data["_2_other_revenue_current"] += amount
-                        elif type == 'expense':
-                            print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other expenses".')
-                            income_expense_data["_6_other_expenses_current"] += amount
+            #         if not (transaction.debit and ('assets' in transaction.debit.lower() or 'cash' in transaction.debit.lower())):
+            #             if type == 'income':
+            #                 print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other revenue".')
+            #                 income_expense_data["_2_other_revenue_current"] += amount
+            #             elif type == 'expense':
+            #                 print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other expenses".')
+            #                 income_expense_data["_6_other_expenses_current"] += amount
                 
                 
 
@@ -315,10 +316,10 @@ def calculate_asset_data(transactions):
             asset_data[category_mapping[debit_category] + suffix] += amount
 
         if credit_category in category_mapping:
-            if credit_category=="cash":
-                asset_data[category_mapping[credit_category] + suffix] -= amount
-            else:
-                asset_data[category_mapping[credit_category] + suffix] += amount
+            # if credit_category=="cash":
+            asset_data[category_mapping[credit_category] + suffix] -= amount
+            # else:
+                # asset_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     asset_data['B_total_noncurrent_assets_current'] = (
@@ -382,6 +383,8 @@ def calculate_liability_data(transactions):
         'A_retained_earnings_previous': 0,
         'A_current_profit_loss_current': 0,
         'A_current_profit_loss_previous': 0,
+        'A_shareholders_equity_current': 0,
+        'A_shareholders_equity_previous': 0,
         'A_total_equity_current': 0,
         'A_total_equity_previous': 0,
         'B_provisions_current': 0,
@@ -392,6 +395,8 @@ def calculate_liability_data(transactions):
         'C_liabilities_over_one_year_previous': 0,
         'D_deferred_income_current': 0,
         'D_deferred_income_previous': 0,
+        'E_deferred_tax_liabilities_current': 0,
+        'E_deferred_tax_liabilities_previous': 0,
         'total_liabilities_current': 0,
         'total_liabilities_previous': 0,
         'liabilities_credit_total': 0,
@@ -413,9 +418,21 @@ def calculate_liability_data(transactions):
         "reserves": "A_reserves",
         "retained earnings": "A_retained_earnings",
         "current profit/loss": "A_current_profit_loss",
+        "shareholder's equity": "A_shareholders_equity",
+        "shareholder equity": "A_shareholders_equity",
+        "shareholders equity": "A_shareholders_equity",
+        "shareholders' equity": "A_shareholders_equity",
+        "shareholders’ equity": "A_shareholders_equity",
         "provisions": "B_provisions",
+        "provisions and similar obligations": "B_provisions",
         "liabilities under one year": "C_liabilities_one_year",
+        "liabilities up to one year": "C_liabilities_one_year",
+        "liabilities up to 1 year": "C_liabilities_one_year",
+        "liabilities under 1 year": "C_liabilities_one_year",
         "liabilities over one year": "C_liabilities_over_one_year",
+        "liabilities over 1 year": "C_liabilities_over_one_year",
+        "deferred taxes": "E_deferred_tax_liabilities",
+        "deferred tax": "E_deferred_tax_liabilities",
         "deferred income": "D_deferred_income",
         "deffered income": "D_deferred_income",
         "liabilities debit": "liabilities_debit",
@@ -438,15 +455,19 @@ def calculate_liability_data(transactions):
             continue  # Skip transactions that don't fall in the current or previous year
 
         # Add the amount to the respective debit or credit category
-        if debit_category in category_mapping:
-                
-            liability_data[category_mapping[debit_category] + suffix] += amount
-
-        if credit_category in category_mapping:
-            if credit_category=="cash":
-                liability_data[category_mapping[credit_category] + suffix] -= amount
-            else:
+        if debit_category == 'deferred taxes' and credit_category == '':
+            liability_data['E_deferred_tax_liabilities' + suffix] += amount
+        else:
+            print('checking', credit_category)
+            if debit_category in category_mapping:                
+                liability_data[category_mapping[debit_category] + suffix] -= amount
+            
+            if credit_category in category_mapping:
+                print('found in credit', debit_category)
+                # if credit_category=="cash":
                 liability_data[category_mapping[credit_category] + suffix] += amount
+                # else:
+                #     liability_data[category_mapping[credit_category] + suffix] += amount
 
     # Calculate totals
     liability_data['A_total_equity_current'] = (
@@ -455,7 +476,8 @@ def calculate_liability_data(transactions):
         liability_data['A_revaluation_reserve_current'] +
         liability_data['A_reserves_current'] +
         liability_data['A_retained_earnings_current'] +
-        liability_data['A_current_profit_loss_current']
+        liability_data['A_current_profit_loss_current'] +
+        liability_data['A_shareholders_equity_current']
     )
     liability_data['A_total_equity_previous'] = (
         liability_data['A_issued_capital_previous'] +
@@ -463,21 +485,24 @@ def calculate_liability_data(transactions):
         liability_data['A_revaluation_reserve_previous'] +
         liability_data['A_reserves_previous'] +
         liability_data['A_retained_earnings_previous'] +
-        liability_data['A_current_profit_loss_previous']
+        liability_data['A_current_profit_loss_previous'] +
+        liability_data['A_shareholders_equity_previous']
     )
     liability_data['total_liabilities_current'] = (
         liability_data['A_total_equity_current'] +
         liability_data['B_provisions_current'] +
         liability_data['C_liabilities_one_year_current'] +
         liability_data['C_liabilities_over_one_year_current'] +
-        liability_data['D_deferred_income_current']
+        liability_data['D_deferred_income_current'] +
+        liability_data['E_deferred_tax_liabilities_current']
     )
     liability_data['total_liabilities_previous'] = (
         liability_data['A_total_equity_previous'] +
         liability_data['B_provisions_previous'] +
         liability_data['C_liabilities_one_year_previous'] +
         liability_data['C_liabilities_over_one_year_previous'] +
-        liability_data['D_deferred_income_previous']
+        liability_data['D_deferred_income_previous'] +
+        liability_data['E_deferred_tax_liabilities_previous']
     )
 
     return liability_data
@@ -713,12 +738,14 @@ def export_balance_sheet_pdf():
         ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
         ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
         ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  VII. Shareholders Equity", liabilities["A_shareholders_equity_current"], liabilities["A_shareholders_equity_previous"]],
         ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
         ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
         ["C. Liabilities", "", ""],
         ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
         ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
         ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["E. Deferred Tax Liabilities", liabilities["E_deferred_tax_liabilities_current"], liabilities["E_deferred_tax_liabilities_previous"]],
         ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]]
     ])
     liability_table = Table(liability_data, hAlign="LEFT")
@@ -854,12 +881,14 @@ def export_balance_sheet_word():
         ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
         ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
         ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  VII. Shareholders Equity", liabilities["A_shareholders_equity_current"], liabilities["A_shareholders_equity_previous"]],
         ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
         ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
         ["C. Liabilities", "", ""],
         ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
         ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
         ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["E. Deferred Tax Liabilities", liabilities["E_deferred_tax_liabilities_current"], liabilities["E_deferred_tax_liabilities_previous"]],
         ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]],
     ]
     for row in liability_data:
@@ -997,12 +1026,14 @@ def export_balance_sheet_excel():
         ["  IV. Reserves", liabilities["A_reserves_current"], liabilities["A_reserves_previous"]],
         ["  V. Retained Earnings (Loss)", liabilities["A_retained_earnings_current"], liabilities["A_retained_earnings_previous"]],
         ["  VI. Current Profit (Loss)", liabilities["A_current_profit_loss_current"], liabilities["A_current_profit_loss_previous"]],
+        ["  VII. Shareholders Equity", liabilities["A_shareholders_equity_current"], liabilities["A_shareholders_equity_previous"]],
         ["  Total for Section A", liabilities["A_total_equity_current"], liabilities["A_total_equity_previous"]],
         ["B. Provisions and Similar Obligations", liabilities["B_provisions_current"], liabilities["B_provisions_previous"]],
         ["C. Liabilities", "", ""],
         ["  Up to 1 Year", liabilities["C_liabilities_one_year_current"], liabilities["C_liabilities_one_year_previous"]],
         ["  Over 1 Year", liabilities["C_liabilities_over_one_year_current"], liabilities["C_liabilities_over_one_year_previous"]],
         ["D. Financing and Deferred Income", liabilities["D_deferred_income_current"], liabilities["D_deferred_income_previous"]],
+        ["E. Deferred Tax Liabilities", liabilities["E_deferred_tax_liabilities_current"], liabilities["E_deferred_tax_liabilities_previous"]],
         ["TOTAL LIABILITIES", liabilities["total_liabilities_current"], liabilities["total_liabilities_previous"]],
     ]
     for row in liability_data:

@@ -46,6 +46,11 @@
             <td>{{ liabilities['A_current_profit_loss_previous'] }}</td>
         </tr>
         <tr>
+            <td>{{ _('VII. Shareholders Equity') }}</td>
+            <td>{{ liabilities['A_shareholders_equity_current'] }}</td>
+            <td>{{ liabilities['A_shareholders_equity_previous'] }}</td>
+        </tr>
+        <tr>
             <td>{{ _('Total for Section A:') }}</td>
             <td>{{ liabilities['A_total_equity_current'] }}</td>
             <td>{{ liabilities['A_total_equity_previous'] }}</td>
@@ -83,7 +88,12 @@
             <td>{{ liabilities['D_deferred_income_previous'] }}</td>
         </tr>
         <tr>
-            <td>{{ _('Total Liabilities (A+B+C+D)') }}</td>
+            <td>{{ _('E. Deferred Tax Liabilities') }}</td>
+            <td>{{ liabilities['E_deferred_tax_liabilities_current'] }}</td>
+            <td>{{ liabilities['E_deferred_tax_liabilities_previous'] }}</td>
+        </tr>
+        <tr>
+            <td>{{ _('Total Liabilities (A+B+C+D+E)') }}</td>
             <td>{{ liabilities['total_liabilities_current'] }}</td>
             <td>{{ liabilities['total_liabilities_previous'] }}</td>
         </tr>
