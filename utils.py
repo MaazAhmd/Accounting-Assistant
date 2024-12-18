@@ -19,6 +19,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Paragraph
 import tempfile
 from difflib import SequenceMatcher
+import re
 
 
 
@@ -100,6 +101,8 @@ def recalculate_totals():
     current_user.liabilities_credit_total = liabilities_credit_total
 
     db.session.commit()
+    
+    
 def calculate_income_expense_data(transactions):
     # Initialize the income_expense_data dictionary
     income_expense_data = defaultdict(float)
@@ -107,8 +110,6 @@ def calculate_income_expense_data(transactions):
     # Get the current and previous year
     current_year = datetime.now().year
     previous_year = current_year - 1
-
-
 
     # Flattened keyword mapping
     keyword_mapping = [
@@ -301,9 +302,9 @@ def calculate_asset_data(transactions):
         ("B_deferred_taxes", ["deferred", "taxes"]),
         ("B_deferred_taxes", ["defered", "taxes"]),
         ("C_inventory", ["inventory"]),
-        ("C_receivables", ["receivables"]),
-        ("C_receivables_over_one_year", ["receivables", "over", "one", "year"]),
-        ("C_receivables_over_one_year", ["receivables", "over", "1", "year"]),
+        ("C_receivables", ["receivable"]),
+        ("C_receivables_over_one_year", ["receivable", "over", "one", "year"]),
+        ("C_receivables_over_one_year", ["receivable", "over", "1", "year"]),
         ("C_investments", ["investments"]),
         ("C_cash", ["cash"]),
         ("D_prepaid_expenses", ["prepaid", "expenses"]),
@@ -390,11 +391,6 @@ def calculate_asset_data(transactions):
     return dict(asset_data)
 
 
-
-
-
-
-
 def calculate_liability_data(transactions):
     from collections import defaultdict
     
@@ -436,11 +432,12 @@ def calculate_liability_data(transactions):
     # Define keyword mapping for liabilities
     keyword_mapping = [
         ("A_issued_capital", ["issued", "capital"]),
-        ("A_share_premiums", ["share", "premiums"]),
+        ("A_share_premiums", ["share", "premium"]),
         ("A_revaluation_reserve", ["revaluation", "reserve"]),
         ("A_reserves", ["reserves"]),
         ("A_retained_earnings", ["retained", "earnings"]),
-        ("A_current_profit_loss", ["current", "profit", "loss"]),
+        ("A_current_profit_loss", ["current", "profit"]),
+        ("A_current_profit_loss", ["revenue"]),
         ("A_shareholders_equity", ["shareholder", "equity"]),
         ("B_provisions", ["provisions"]),
         ("C_liabilities_one_year", ["liabilities", "under", "one", "year"]),
@@ -449,7 +446,7 @@ def calculate_liability_data(transactions):
         ("C_liabilities_one_year", ["liabilities", "up", "1", "year"]),
         ("C_liabilities_over_one_year", ["liabilities", "over", "one", "year"]),
         ("C_liabilities_over_one_year", ["liabilities", "over", "1", "year"]),
-        ("E_deferred_tax_liabilities", ["deferred", "tax"]),
+        ("E_deferred_tax_liabilities", ["deferred", "tax", "liabilities"]),
         ("D_deferred_income", ["deferred", "income"]),
         ("D_deferred_income", ["deffered", "income"]),
         ("D_deferred_income", ["defferred", "income"]),
@@ -466,8 +463,17 @@ def calculate_liability_data(transactions):
         matched_keys = []
 
         for key, keywords in keyword_mapping:
-            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
+            if all(any(similar(re.sub(r'\W+', '', word), keyword) for word in category_lower.split()) for keyword in keywords):
+                # print("Key is ", key)
+                # print("Keywords are ", keywords)
+                # print("Word is ", category_lower)
+                # print("Matched")
                 matched_keys.append(key)
+            # else:
+            #     print("Not matched: ")
+            #     print("Key is ", key)
+            #     print("Keywords are ", keywords)
+            #     print("Word is ", category_lower)
 
         if matched_keys:
             return matched_keys[0]
@@ -486,13 +492,18 @@ def calculate_liability_data(transactions):
         else:
             continue  
 
-        if debit_category == 'deferred taxes' and not credit_category:
+        if "deferred" in debit_category and "tax" in debit_category and credit_category == "":
             liability_data['E_deferred_tax_liabilities' + suffix] += amount
+        elif "pre" in debit_category and "expense" in debit_category  and "paid" in debit_category and not credit_category:
+            liability_data['C_liabilities_one_year' + suffix] += amount
+        elif ("deffered" in debit_category or "deferred" in debit_category) and "income" in debit_category and not credit_category:
+            liability_data['D_deferred_income' + suffix] -= amount
+            liability_data['E_deferred_tax_liabilities' + suffix] += amount
+        elif "receivable" in debit_category and not credit_category:
+            liability_data['A_current_profit_loss' + suffix] += amount
         else:
             debit_key = map_category_to_key(debit_category)
             credit_key = map_category_to_key(credit_category)
-
-
 
             if debit_key:
                 liability_data[debit_key + suffix] -= amount
