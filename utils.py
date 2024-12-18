@@ -318,7 +318,7 @@ def calculate_asset_data(transactions):
         matched_keys = []
 
         for key, keywords in keyword_mapping:
-            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
+            if all(any(similar(re.sub(r'\W+', '', word), keyword) for word in category_lower.split()) for keyword in keywords):
                 matched_keys.append(key)
 
         if matched_keys:
@@ -337,17 +337,21 @@ def calculate_asset_data(transactions):
             suffix = "_previous"
         else:
             continue  
+        
+        if "provisions" in credit_category and not debit_category:
+            asset_data['D_prepaid_expenses' + suffix] += amount
+        
+        else:
+            debit_key = map_category_to_key(debit_category)
+            credit_key = map_category_to_key(credit_category)
 
-        debit_key = map_category_to_key(debit_category)
-        credit_key = map_category_to_key(credit_category)
-
-        if debit_key:
-            asset_data[debit_key + suffix] += amount
-        if credit_key:
-            # if credit_category=="cash":
-            #      asset_data[credit_key+ suffix] -= amount
-            # else:
-            asset_data[credit_key + suffix] = amount
+            if debit_key:
+                asset_data[debit_key + suffix] += amount
+            if credit_key:
+                # if credit_category=="cash":
+                #      asset_data[credit_key+ suffix] -= amount
+                # else:
+                asset_data[credit_key + suffix] -= amount
 
     asset_data['B_total_noncurrent_assets_current'] = (
         asset_data['B_intangible_assets_current'] +
