@@ -18,6 +18,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle,Paragraph
 import tempfile
+from difflib import SequenceMatcher
 
 
 
@@ -107,6 +108,34 @@ def calculate_income_expense_data(transactions):
     current_year = datetime.now().year
     previous_year = current_year - 1
 
+
+
+    # Flattened keyword mapping
+    keyword_mapping = [
+        ("_3_raw_material_expenses_current", ["raw", "materials", "supplies", "external", "services", "expenses"]),
+        ("_4_personnel_expenses_current", ["personnel", "expenses"]),
+        ("_5_depreciation_expenses_current", ["depreciation", "expenses"]),
+        ("_6_other_expenses_current", ["other", "expenses"]),
+        ("_7_tax_expenses_current", ["tax", "expenses"]),
+        ("_1_net_sales_revenue_current", ["net", "sales", "revenue"]),
+        ("_2_other_revenue_current", ["other", "revenue"]),
+    ]
+
+    def similar(a, b, threshold=0.8):
+        return SequenceMatcher(None, a, b).ratio() > threshold
+
+    def map_category_to_key(category):
+        category_lower = category.lower()
+        matched_keys = []
+
+        for key, keywords in keyword_mapping:
+            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
+                matched_keys.append(key)
+
+        if matched_keys:
+            return matched_keys[0]
+        return None
+
     # Group transactions by category and year
     for transaction in transactions:
         year = transaction.date.year
@@ -130,20 +159,25 @@ def calculate_income_expense_data(transactions):
                 type = type.lower()
                 
             print(category_lower)
-            if category_lower == "raw materials, supplies, and external services expenses":
-                income_expense_data["_3_raw_material_expenses_current"] += amount
-            elif category_lower == "personnel expenses":
-                income_expense_data["_4_personnel_expenses_current"] += amount
-            elif category_lower == "depreciation expenses":
-                income_expense_data["_5_depreciation_expenses_current"] += amount
-            elif category_lower == "other expenses":
-                income_expense_data["_6_other_expenses_current"] += amount
-            elif category_lower == "tax expenses":
-                income_expense_data["_7_tax_expenses_current"] += amount
-            elif category_lower == "net sales revenue":
-                income_expense_data["_1_net_sales_revenue_current"] += amount
-            elif category_lower == "other revenue":
-                income_expense_data["_2_other_revenue_current"] += amount
+            # if category_lower == "raw materials, supplies, and external services expenses":
+            #     income_expense_data["_3_raw_material_expenses_current"] += amount
+            # elif category_lower == "personnel expenses":
+            #     income_expense_data["_4_personnel_expenses_current"] += amount
+            # elif category_lower == "depreciation expenses":
+            #     income_expense_data["_5_depreciation_expenses_current"] += amount
+            # elif category_lower == "other expenses":
+            #     income_expense_data["_6_other_expenses_current"] += amount
+            # elif category_lower == "tax expenses":
+            #     income_expense_data["_7_tax_expenses_current"] += amount
+            # elif category_lower == "net sales revenue":
+            #     income_expense_data["_1_net_sales_revenue_current"] += amount
+            # elif category_lower == "other revenue":
+            #     income_expense_data["_2_other_revenue_current"] += amount
+
+            matched_key = map_category_to_key(category_lower)
+            if matched_key:
+                income_expense_data[matched_key] += amount
+
             # elif category_lower == "":
             #     if not (transaction.credit and ('liabilities over 1 year' in transaction.credit.lower() or 'liabilities over one year' in transaction.credit.lower()
             #         or ('shareholder' in transaction.credit.lower() and 'equity' in transaction.credit.lower())
@@ -164,21 +198,13 @@ def calculate_income_expense_data(transactions):
                 
 
         elif year == previous_year:
-            category_lower = category.lower()  # Normalize to lowercase
-            if category_lower == "raw materials, supplies, and external services expenses":
-                income_expense_data["_3_raw_material_expenses_previous"] += amount
-            elif category_lower == "personnel expenses":
-                income_expense_data["_4_personnel_expenses_previous"] += amount
-            elif category_lower == "depreciation expenses":
-                income_expense_data["_5_depreciation_expenses_previous"] += amount
-            elif category_lower == "other expenses":
-                income_expense_data["_6_other_expenses_previous"] += amount
-            elif category_lower == "tax expenses":
-                income_expense_data["_7_tax_expenses_previous"] += amount
-            elif category_lower == "net sales revenue":
-                income_expense_data["_1_net_sales_revenue_previous"] += amount
-            elif category_lower == "other revenue":
-                income_expense_data["_2_other_revenue_previous"] += amount
+            if category:
+                category_lower = category.lower()  # Normalize to lowercase
+            else:
+                category_lower = ""
+            matched_key = map_category_to_key(category_lower)
+            if matched_key:
+                income_expense_data[matched_key] += amount
 
 
     income_expense_data["_total_expenses_current"] = (
@@ -243,85 +269,85 @@ def calculate_income_expense_data(transactions):
     return income_expense_data
 
 def calculate_asset_data(transactions):
+    from collections import defaultdict
+    
     # Initialize the asset_data dictionary
-    asset_data = {
-        'A_asset_unpaid_capital_current': 0,
-        'A_asset_unpaid_capital_previous': 0,
-        'B_intangible_assets_current': 0,
-        'B_intangible_assets_previous': 0,
-        'B_fixed_assets_current': 0,
-        'B_fixed_assets_previous': 0,
-        'B_long_term_financial_assets_current': 0,
-        'B_long_term_financial_assets_previous': 0,
-        'B_deferred_taxes_current': 0,
-        'B_deferred_taxes_previous': 0,
-        'B_total_noncurrent_assets_current': 0,
-        'B_total_noncurrent_assets_previous': 0,
-        'C_current_assets_current': 0,
-        'C_current_assets_previous': 0,
-        'C_inventory_current': 0,
-        'C_inventory_previous': 0,
-        'C_receivables_current': 0,
-        'C_receivables_previous': 0,
-        'C_receivables_over_one_year_current': 0,
-        'C_receivables_over_one_year_previous': 0,
-        'C_investments_current': 0,
-        'C_investments_previous': 0,
-        'C_cash_current': 0,
-        'C_cash_previous': 0,
-        'C_total_current_assets_current': 0,
-        'C_total_current_assets_previous': 0,
-        'D_prepaid_expenses_current': 0,
-        'D_prepaid_expenses_previous': 0,
-        'total_assets_current': 0,
-        'total_assets_previous': 0,
-    }
+    asset_data = defaultdict(float)
 
     # Get the current and previous year
     current_year = datetime.now().year
     previous_year = current_year - 1
 
-    # Map balance sheet categories to the asset_data keys (normalized to lowercase)
-    category_mapping = {
-        "subscribed but unpaid capital": "A_asset_unpaid_capital",
-        "intangible assets": "B_intangible_assets",
-        "property, plant, and equipment": "B_fixed_assets",
-        "long-term financial assets": "B_long_term_financial_assets",
-        "deferred taxes": "B_deferred_taxes",
-        "inventory": "C_inventory",
-        "receivables": "C_receivables",
-        "receivables over one year": "C_receivables_over_one_year",
-        "investments": "C_investments",
-        "cash": "C_cash",
-        "prepaid expenses": "D_prepaid_expenses",
-    }
+    # category_mapping = {
+    #     "subscribed but unpaid capital": "A_asset_unpaid_capital",
+    #     "intangible assets": "B_intangible_assets",
+    #     "property, plant, and equipment": "B_fixed_assets",
+    #     "long-term financial assets": "B_long_term_financial_assets",
+    #     "deferred taxes": "B_deferred_taxes",
+    #     "inventory": "C_inventory",
+    #     "receivables": "C_receivables",
+    #     "receivables over one year": "C_receivables_over_one_year",
+    #     "investments": "C_investments",
+    #     "cash": "C_cash",
+    #     "prepaid expenses": "D_prepaid_expenses",
+    # }
 
-    # Iterate over transactions
+    # Define keyword mapping for categories
+    keyword_mapping = [
+        ("A_asset_unpaid_capital", ["subscribed", "unpaid", "capital"]),
+        ("B_intangible_assets", ["intangible", "assets"]),
+        ("B_fixed_assets", ["property", "plant", "equipment"]),
+        ("B_long_term_financial_assets", ["long-term", "financial", "assets"]),
+        ("B_deferred_taxes", ["deferred", "taxes"]),
+        ("B_deferred_taxes", ["defered", "taxes"]),
+        ("C_inventory", ["inventory"]),
+        ("C_receivables", ["receivables"]),
+        ("C_receivables_over_one_year", ["receivables", "over", "one", "year"]),
+        ("C_receivables_over_one_year", ["receivables", "over", "1", "year"]),
+        ("C_investments", ["investments"]),
+        ("C_cash", ["cash"]),
+        ("D_prepaid_expenses", ["prepaid", "expenses"]),
+    ]
+
+    def similar(a, b, threshold=0.8):
+        return SequenceMatcher(None, a, b).ratio() > threshold
+
+    def map_category_to_key(category):
+        category_lower = category.lower()
+        matched_keys = []
+
+        for key, keywords in keyword_mapping:
+            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
+                matched_keys.append(key)
+
+        if matched_keys:
+            return matched_keys[0]
+        return None
+
     for transaction in transactions:
         year = transaction.date.year
         debit_category = transaction.debit.lower() if transaction.debit else ""
         credit_category = transaction.credit.lower() if transaction.credit else ""
         amount = transaction.amount
 
-        # Determine the prefix (current or previous)
         if year == current_year:
             suffix = "_current"
         elif year == previous_year:
             suffix = "_previous"
         else:
-            continue  # Skip transactions that don't fall in the current or previous year
+            continue  
 
-        # Add the amount to the respective debit or credit category
-        if debit_category in category_mapping:
-            asset_data[category_mapping[debit_category] + suffix] += amount
+        debit_key = map_category_to_key(debit_category)
+        credit_key = map_category_to_key(credit_category)
 
-        if credit_category in category_mapping:
+        if debit_key:
+            asset_data[debit_key + suffix] += amount
+        if credit_key:
             # if credit_category=="cash":
-            asset_data[category_mapping[credit_category] + suffix] -= amount
+            #      asset_data[credit_key+ suffix] -= amount
             # else:
-                # asset_data[category_mapping[credit_category] + suffix] += amount
+            asset_data[credit_key + suffix] = amount
 
-    # Calculate totals
     asset_data['B_total_noncurrent_assets_current'] = (
         asset_data['B_intangible_assets_current'] +
         asset_data['B_fixed_assets_current'] +
@@ -361,119 +387,121 @@ def calculate_asset_data(transactions):
         asset_data['D_prepaid_expenses_previous']
     )
 
-    return asset_data
+    return dict(asset_data)
+
+
+
 
 
 
 
 def calculate_liability_data(transactions):
+    from collections import defaultdict
+    
     # Initialize the liability_data dictionary
-    liability_data = {
-        'A_equity_current': 0,
-        'A_equity_previous': 0,
-        'A_issued_capital_current': 0,
-        'A_issued_capital_previous': 0,
-        'A_share_premiums_current': 0,
-        'A_share_premiums_previous': 0,
-        'A_revaluation_reserve_current': 0,
-        'A_revaluation_reserve_previous': 0,
-        'A_reserves_current': 0,
-        'A_reserves_previous': 0,
-        'A_retained_earnings_current': 0,
-        'A_retained_earnings_previous': 0,
-        'A_current_profit_loss_current': 0,
-        'A_current_profit_loss_previous': 0,
-        'A_shareholders_equity_current': 0,
-        'A_shareholders_equity_previous': 0,
-        'A_total_equity_current': 0,
-        'A_total_equity_previous': 0,
-        'B_provisions_current': 0,
-        'B_provisions_previous': 0,
-        'C_liabilities_one_year_current': 0,
-        'C_liabilities_one_year_previous': 0,
-        'C_liabilities_over_one_year_current': 0,
-        'C_liabilities_over_one_year_previous': 0,
-        'D_deferred_income_current': 0,
-        'D_deferred_income_previous': 0,
-        'E_deferred_tax_liabilities_current': 0,
-        'E_deferred_tax_liabilities_previous': 0,
-        'total_liabilities_current': 0,
-        'total_liabilities_previous': 0,
-        'liabilities_credit_total': 0,
-        'liabilities_debit_total': 0,
-        'liabilities_credit_previous': 0,
-        'liabilities_debit_previous': 0,
-    }
-
+    liability_data = defaultdict(float)
 
     # Get the current and previous year
     current_year = datetime.now().year
     previous_year = current_year - 1
 
-    # Map liability categories to the liability_data keys (normalized to lowercase)
-    category_mapping = {
-        "issued capital": "A_issued_capital",
-        "share premiums": "A_share_premiums",
-        "revaluation reserve": "A_revaluation_reserve",
-        "reserves": "A_reserves",
-        "retained earnings": "A_retained_earnings",
-        "current profit/loss": "A_current_profit_loss",
-        "shareholder's equity": "A_shareholders_equity",
-        "shareholder equity": "A_shareholders_equity",
-        "shareholders equity": "A_shareholders_equity",
-        "shareholders' equity": "A_shareholders_equity",
-        "shareholders’ equity": "A_shareholders_equity",
-        "provisions": "B_provisions",
-        "provisions and similar obligations": "B_provisions",
-        "liabilities under one year": "C_liabilities_one_year",
-        "liabilities up to one year": "C_liabilities_one_year",
-        "liabilities up to 1 year": "C_liabilities_one_year",
-        "liabilities under 1 year": "C_liabilities_one_year",
-        "liabilities over one year": "C_liabilities_over_one_year",
-        "liabilities over 1 year": "C_liabilities_over_one_year",
-        'liabilities - "up to 1 year"': "C_liabilities_one_year",
-        'liabilities - "up to 1 year': "C_liabilities_one_year",
-        "deferred taxes": "E_deferred_tax_liabilities",
-        "deferred tax": "E_deferred_tax_liabilities",
-        "deferred tax liabilities": "E_deferred_tax_liabilities",
-        "deferred tax liability": "E_deferred_tax_liabilities",
-        "deferred income": "D_deferred_income",
-        "deffered income": "D_deferred_income",
-        "liabilities debit": "liabilities_debit",
-        "liabilities credit": "liabilities_credit",
-    }
+    # category_mapping = {
+    #     "issued capital": "A_issued_capital",
+    #     "share premiums": "A_share_premiums",
+    #     "revaluation reserve": "A_revaluation_reserve",
+    #     "reserves": "A_reserves",
+    #     "retained earnings": "A_retained_earnings",
+    #     "current profit/loss": "A_current_profit_loss",
+    #     "shareholder's equity": "A_shareholders_equity",
+    #     "shareholder equity": "A_shareholders_equity",
+    #     "shareholders equity": "A_shareholders_equity",
+    #     "shareholders' equity": "A_shareholders_equity",
+    #     "shareholders’ equity": "A_shareholders_equity",
+    #     "provisions": "B_provisions",
+    #     "provisions and similar obligations": "B_provisions",
+    #     "liabilities under one year": "C_liabilities_one_year",
+    #     "liabilities up to one year": "C_liabilities_one_year",
+    #     "liabilities up to 1 year": "C_liabilities_one_year",
+    #     "liabilities under 1 year": "C_liabilities_one_year",
+    #     "liabilities over one year": "C_liabilities_over_one_year",
+    #     "liabilities over 1 year": "C_liabilities_over_one_year",
+    #     "deferred taxes": "E_deferred_tax_liabilities",
+    #     "deferred tax": "E_deferred_tax_liabilities",
+    #     "deferred income": "D_deferred_income",
+    #     "deffered income": "D_deferred_income",
+    #     "liabilities debit": "liabilities_debit",
+    #     "liabilities credit": "liabilities_credit",
+    # }
 
-    # Iterate over transactions
+    # Define keyword mapping for liabilities
+    keyword_mapping = [
+        ("A_issued_capital", ["issued", "capital"]),
+        ("A_share_premiums", ["share", "premiums"]),
+        ("A_revaluation_reserve", ["revaluation", "reserve"]),
+        ("A_reserves", ["reserves"]),
+        ("A_retained_earnings", ["retained", "earnings"]),
+        ("A_current_profit_loss", ["current", "profit", "loss"]),
+        ("A_shareholders_equity", ["shareholder", "equity"]),
+        ("B_provisions", ["provisions"]),
+        ("C_liabilities_one_year", ["liabilities", "under", "one", "year"]),
+        ("C_liabilities_one_year", ["liabilities", "under", "1", "year"]),
+        ("C_liabilities_one_year", ["liabilities", "up", "one", "year"]),
+        ("C_liabilities_one_year", ["liabilities", "up", "1", "year"]),
+        ("C_liabilities_over_one_year", ["liabilities", "over", "one", "year"]),
+        ("C_liabilities_over_one_year", ["liabilities", "over", "1", "year"]),
+        ("E_deferred_tax_liabilities", ["deferred", "tax"]),
+        ("D_deferred_income", ["deferred", "income"]),
+        ("D_deferred_income", ["deffered", "income"]),
+        ("D_deferred_income", ["defferred", "income"]),
+        ("D_deferred_income", ["defered", "income"]),
+        ("liabilities_debit", ["liabilities", "debit"]),
+        ("liabilities_credit", ["liabilities", "credit"]),
+    ]
+
+    def similar(a, b, threshold=0.8):
+        return SequenceMatcher(None, a, b).ratio() > threshold
+
+    def map_category_to_key(category):
+        category_lower = category.lower()
+        matched_keys = []
+
+        for key, keywords in keyword_mapping:
+            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
+                matched_keys.append(key)
+
+        if matched_keys:
+            return matched_keys[0]
+        return None
+
     for transaction in transactions:
         year = transaction.date.year
         debit_category = transaction.debit.lower() if transaction.debit else ""
         credit_category = transaction.credit.lower() if transaction.credit else ""
         amount = transaction.amount
 
-        # Determine the prefix (current or previous)
         if year == current_year:
             suffix = "_current"
         elif year == previous_year:
             suffix = "_previous"
         else:
-            continue  # Skip transactions that don't fall in the current or previous year
+            continue  
 
-        # Add the amount to the respective debit or credit category
-        if debit_category == 'deferred taxes' and credit_category == '':
+        if debit_category == 'deferred taxes' and not credit_category:
             liability_data['E_deferred_tax_liabilities' + suffix] += amount
         else:
-            print('checking', credit_category)
-            if debit_category in category_mapping:                
-                liability_data[category_mapping[debit_category] + suffix] -= amount
-            
-            if credit_category in category_mapping:
-                print('found in credit', debit_category)
-                # if credit_category=="cash":
-                liability_data[category_mapping[credit_category] + suffix] += amount
-                # else:
-                #     liability_data[category_mapping[credit_category] + suffix] += amount
+            debit_key = map_category_to_key(debit_category)
+            credit_key = map_category_to_key(credit_category)
 
-    # Calculate totals
+
+
+            if debit_key:
+                liability_data[debit_key + suffix] -= amount
+            if credit_key:
+                # if credit_category=="cash":
+                #  liability_data[credit_key+ suffix] -= amount
+                # else:
+                liability_data[credit_key + suffix] += amount
+
     liability_data['A_total_equity_current'] = (
         liability_data['A_issued_capital_current'] +
         liability_data['A_share_premiums_current'] +
@@ -509,7 +537,8 @@ def calculate_liability_data(transactions):
         liability_data['E_deferred_tax_liabilities_previous']
     )
 
-    return liability_data
+    return dict(liability_data)
+
 
 
 def export_income_expense_pdf():
