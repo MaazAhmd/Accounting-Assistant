@@ -102,112 +102,52 @@ def recalculate_totals():
 
     db.session.commit()
     
-    
+def normalize_text(text):
+    """Normalize text by removing extra spaces, commas, and converting to lowercase."""
+    return re.sub(r'[,\s]+', ' ', text.strip()).lower()
+
+def match_category(category, keyword_mapping):
+    """Match a category to the keyword mapping using normalized text."""
+    normalized_category = normalize_text(category)
+    for keywords, mapped_value in keyword_mapping.items():
+        if any(keyword in normalized_category for keyword in keywords):
+            return mapped_value
+    return None
+
 def calculate_income_expense_data(transactions):
     # Initialize the income_expense_data dictionary
     income_expense_data = defaultdict(float)
+
+    # Define keyword mapping
+    keyword_mapping = {
+        (normalize_text("raw materials"), normalize_text("supplies"), normalize_text("external services expenses")): "_3_raw_material_expenses",
+        (normalize_text("personnel expenses"),): "_4_personnel_expenses",
+        (normalize_text("depreciation expenses"),): "_5_depreciation_expenses",
+        (normalize_text("other expenses"),): "_6_other_expenses",
+        (normalize_text("tax expenses"),): "_7_tax_expenses",
+        (normalize_text("net sales revenue"),): "_1_net_sales_revenue",
+        (normalize_text("other revenue"),): "_2_other_revenue",
+    }
 
     # Get the current and previous year
     current_year = datetime.now().year
     previous_year = current_year - 1
 
-    # Flattened keyword mapping
-    keyword_mapping = [
-        ("_3_raw_material_expenses_current", ["raw", "materials", "supplies", "external", "services", "expenses"]),
-        ("_4_personnel_expenses_current", ["personnel", "expenses"]),
-        ("_5_depreciation_expenses_current", ["depreciation", "expenses"]),
-        ("_6_other_expenses_current", ["other", "expenses"]),
-        ("_7_tax_expenses_current", ["tax", "expenses"]),
-        ("_1_net_sales_revenue_current", ["net", "sales", "revenue"]),
-        ("_2_other_revenue_current", ["other", "revenue"]),
-    ]
-
-    def similar(a, b, threshold=0.8):
-        return SequenceMatcher(None, a, b).ratio() > threshold
-
-    def map_category_to_key(category):
-        category_lower = category.lower()
-        matched_keys = []
-
-        for key, keywords in keyword_mapping:
-            if all(any(similar(word, keyword) for word in category_lower.split()) for keyword in keywords):
-                matched_keys.append(key)
-
-        if matched_keys:
-            return matched_keys[0]
-        return None
-
     # Group transactions by category and year
     for transaction in transactions:
         year = transaction.date.year
-        category = transaction.income_statement_category
+        category = transaction.income_statement_category or ""
         amount = transaction.amount
-        transaction_category = transaction.category
-        type = transaction.type
 
-        if year == current_year:
-            if category:
-                category_lower = category.lower()  # Normalize to lowercase
-            else:
-                category_lower = ""
-                
-            if transaction_category:
-                transaction_category_lower = transaction_category.lower()
-            else:
-                transaction_category_lower = ""
-                
-            if type:
-                type = type.lower()
-                
-            print(category_lower)
-            # if category_lower == "raw materials, supplies, and external services expenses":
-            #     income_expense_data["_3_raw_material_expenses_current"] += amount
-            # elif category_lower == "personnel expenses":
-            #     income_expense_data["_4_personnel_expenses_current"] += amount
-            # elif category_lower == "depreciation expenses":
-            #     income_expense_data["_5_depreciation_expenses_current"] += amount
-            # elif category_lower == "other expenses":
-            #     income_expense_data["_6_other_expenses_current"] += amount
-            # elif category_lower == "tax expenses":
-            #     income_expense_data["_7_tax_expenses_current"] += amount
-            # elif category_lower == "net sales revenue":
-            #     income_expense_data["_1_net_sales_revenue_current"] += amount
-            # elif category_lower == "other revenue":
-            #     income_expense_data["_2_other_revenue_current"] += amount
+        # Normalize and match category
+        mapped_category = match_category(category, keyword_mapping)
+        
+        if year == current_year and mapped_category:
+            income_expense_data[f"{mapped_category}_current"] += amount
+        elif year == previous_year and mapped_category:
+            income_expense_data[f"{mapped_category}_previous"] += amount
 
-            matched_key = map_category_to_key(category_lower)
-            if matched_key:
-                income_expense_data[matched_key] += amount
-
-            # elif category_lower == "":
-            #     if not (transaction.credit and ('liabilities over 1 year' in transaction.credit.lower() or 'liabilities over one year' in transaction.credit.lower()
-            #         or ('shareholder' in transaction.credit.lower() and 'equity' in transaction.credit.lower())
-            #         or ('revaluation' in transaction.credit.lower() and 'reserve' in transaction.credit.lower())
-            #         or ('share' in transaction.credit.lower() and 'premium' in transaction.credit.lower())
-            #         or ('retained' in transaction.credit.lower() and 'earning' in transaction.credit.lower())
-            #         or ('issued' in transaction.credit.lower() and 'capital' in transaction.credit.lower())
-            #         or ('provisions' in transaction.credit.lower() or 'similar obligations' in transaction.credit.lower()))):
-                    
-            #         if not (transaction.debit and ('assets' in transaction.debit.lower() or 'cash' in transaction.debit.lower())):
-            #             if type == 'income':
-            #                 print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other revenue".')
-            #                 income_expense_data["_2_other_revenue_current"] += amount
-            #             elif type == 'expense':
-            #                 print('No category found for transaction: ', str(transaction.id), '\nAssigning default category "other expenses".')
-            #                 income_expense_data["_6_other_expenses_current"] += amount
-                
-                
-
-        elif year == previous_year:
-            if category:
-                category_lower = category.lower()  # Normalize to lowercase
-            else:
-                category_lower = ""
-            matched_key = map_category_to_key(category_lower)
-            if matched_key:
-                income_expense_data[matched_key] += amount
-
-
+    # Calculate totals and derived metrics
     income_expense_data["_total_expenses_current"] = (
         income_expense_data["_3_raw_material_expenses_current"] +
         income_expense_data["_4_personnel_expenses_current"] +
@@ -239,11 +179,11 @@ def calculate_income_expense_data(transactions):
     )
 
     income_expense_data["_10_net_profit_current"] = (
-        income_expense_data["_8_accounting_profit_current"] -
+        income_expense_data.get("_8_accounting_profit_current", 0) -
         income_expense_data["_7_tax_expenses_current"]
     )
     income_expense_data["_10_net_profit_previous"] = (
-        income_expense_data["_8_accounting_profit_previous"] -
+        income_expense_data.get("_8_accounting_profit_previous", 0) -
         income_expense_data["_7_tax_expenses_previous"]
     )
 
@@ -260,11 +200,11 @@ def calculate_income_expense_data(transactions):
 
     income_expense_data["_total_all_revenue_current"] = (
         income_expense_data["_total_revenue_current"] +
-        income_expense_data["_11_total_loss_current"]
+        income_expense_data.get("_11_total_loss_current", 0)
     )
     income_expense_data["_total_all_revenue_previous"] = (
         income_expense_data["_total_revenue_previous"] +
-        income_expense_data["_11_total_loss_previous"]
+        income_expense_data.get("_11_total_loss_previous", 0)
     )
 
     return income_expense_data
