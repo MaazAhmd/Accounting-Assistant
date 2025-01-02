@@ -178,14 +178,28 @@ def calculate_income_expense_data(transactions):
         income_expense_data["_total_expenses_previous"] - income_expense_data["_total_revenue_previous"]
     )
 
-    income_expense_data["_10_net_profit_current"] = (
-        income_expense_data.get("_8_accounting_profit_current", 0) -
-        income_expense_data["_7_tax_expenses_current"]
+
+    income_expense_data["_11_total_loss_current"] = max(
+        0,
+        income_expense_data["_total_expenses_current"] +income_expense_data["_7_tax_expenses_current"]- income_expense_data["_total_revenue_current"]
     )
-    income_expense_data["_10_net_profit_previous"] = (
-        income_expense_data.get("_8_accounting_profit_previous", 0) -
-        income_expense_data["_7_tax_expenses_previous"]
+    income_expense_data["_11_total_loss_previous"] = max(
+        0,
+        income_expense_data["_total_expenses_previous"] +income_expense_data["_7_tax_expenses_current"] - income_expense_data["_total_revenue_previous"]
     )
+
+
+
+    income_expense_data["_8_accounting_profit_current"] = max(
+        0,
+        income_expense_data["_total_revenue_current"] - income_expense_data["_total_expenses_current"]
+    )
+    income_expense_data["_8_accounting_profit_previous"] = max(
+        0,
+        income_expense_data["_total_revenue_previous"] - income_expense_data["_total_expenses_previous"]
+    )
+
+
 
     income_expense_data["_total_all_expenses_current"] = (
         income_expense_data["_total_expenses_current"] +
@@ -207,6 +221,14 @@ def calculate_income_expense_data(transactions):
         income_expense_data.get("_11_total_loss_previous", 0)
     )
 
+    income_expense_data["_10_net_profit_current"] = max(0,
+        income_expense_data.get("_total_all_revenue_current", 0) -
+        income_expense_data["_total_all_expenses_current"]-income_expense_data["_7_tax_expenses_current"]
+    )
+    income_expense_data["_10_net_profit_previous"] = max(0,
+        income_expense_data.get("_total_all_revenue_previous", 0) -
+        income_expense_data["_total_all_expenses_previous"]-income_expense_data["_7_tax_expenses_current"]
+    )
     return income_expense_data
 
 def calculate_asset_data(transactions):
