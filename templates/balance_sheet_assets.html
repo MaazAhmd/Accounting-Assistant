@@ -1,95 +1,234 @@
 <h1>{{ _('Assets') }}</h1>
 
 <table class="table">
-    <thead>
-        <tr>
-            <th>{{ _('SECTIONS, GROUPS, ITEMS') }}</th>
-            <th>{{ _('Amount (thousands EUR) Current Year') }}</th>
-            <th>{{ _('Amount (thousands EUR) Previous Year') }}</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ _('A. Subscribed but Unpaid Capital') }}</td>
-            <td>{{ assets['A_asset_unpaid_capital_current'] }}</td>
-            <td>{{ assets['A_asset_unpaid_capital_previous'] }}</td>
-        </tr>
+  <thead>
+    <tr>
+      <th>{{ _('SECTIONS, GROUPS, ITEMS') }}</th>
+      <th>{{ _('Amount (thousands EUR) Current Year') }}</th>
+      <th>{{ _('Amount (thousands EUR) Previous Year') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ _('A. Subscribed but Unpaid Capital') }}</td>
+      <td>
+        {{ str(abs(assets['A_asset_unpaid_capital_current'])) if
+        'A_asset_unpaid_capital_current' in assets and
+        assets['A_asset_unpaid_capital_current'] < 0 else
+        str(assets['A_asset_unpaid_capital_current']) if
+        'A_asset_unpaid_capital_current' in assets else '' }}
+      </td>
+      <td>
+        {{ str(abs(assets['A_asset_unpaid_capital_previous'])) if
+        'A_asset_unpaid_capital_previous' in assets and
+        assets['A_asset_unpaid_capital_previous'] < 0 else
+        str(assets['A_asset_unpaid_capital_previous']) if
+        'A_asset_unpaid_capital_previous' in assets else '' }}
+      </td>
+    </tr>
 
-
-        <tr>
-            <td>{{ _('B. Non-Current (Long-Term) Assets') }}</td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>{{ _('I. Intangible Assets') }}</td>
-            <td>{{ assets['B_intangible_assets_current'] }}</td>
-            <td>{{ assets['B_intangible_assets_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('II. Property, Plant, and Equipment') }}</td>
-            <td>{{ assets['B_fixed_assets_current'] }}</td>
-            <td>{{ assets['B_fixed_assets_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('III. Long-Term Financial Assets') }}</td>
-            <td>{{ assets['B_long_term_financial_assets_current'] }}</td>
-            <td>{{ assets['B_long_term_financial_assets_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('IV. Deferred Taxes') }}</td>
-            <td>{{ assets['B_deferred_taxes_current'] }}</td>
-            <td>{{ assets['B_deferred_taxes_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('Total for Section B:') }}</td>
-            <td>{{ assets['B_total_noncurrent_assets_current'] }}</td>
-            <td>{{ assets['B_total_noncurrent_assets_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('C. Current (Short-Term) Assets') }}</td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>{{ _('I. Inventory') }}</td>
-            <td>{{ assets['C_inventory_current'] }}</td>
-            <td>{{ assets['C_inventory_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('II. Receivables, including:') }}</td>
-            <td>{{ assets['C_receivables_current'] }}</td>
-            <td>{{ assets['C_receivables_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('over 1 year') }}</td>
-            <td>{{ assets['C_receivables_over_one_year_current'] }}</td>
-            <td>{{ assets['C_receivables_over_one_year_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('III. Investments') }}</td>
-            <td>{{ assets['C_investments_current'] }}</td>
-            <td>{{ assets['C_investments_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('IV. Cash and Cash Equivalents') }}</td>
-            <td>{{ assets['C_cash_current'] }}</td>
-            <td>{{ assets['C_cash_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('Total for Section C:') }}</td>
-            <td>{{ assets['C_total_current_assets_current'] }}</td>
-            <td>{{ assets['C_total_current_assets_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('D. Prepaid Expenses') }}</td>
-            <td>{{ assets['D_prepaid_expenses_current'] }}</td>
-            <td>{{ assets['D_prepaid_expenses_previous'] }}</td>
-        </tr>
-        <tr>
-            <td>{{ _('TOTAL ASSETS (A+B+C+D)') }}</td>
-            <td>{{ assets['total_assets_current'] }}</td>
-            <td>{{ assets['total_assets_previous'] }}</td>
-        </tr>
-    </tbody>
+    <tr>
+      <td>{{ _('B. Non-Current (Long-Term) Assets') }}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>{{ _('I. Intangible Assets') }}</td>
+      <td>
+        {% if 'B_intangible_assets_current' in assets %}{{ '(' +
+        str(abs(assets['B_intangible_assets_current'])) + ')' if
+        assets['B_intangible_assets_current'] < 0 else
+        str(assets['B_intangible_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'B_intangible_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['B_intangible_assets_previous'])) + ')' if
+        assets['B_intangible_assets_previous'] < 0 else
+        str(assets['B_intangible_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('II. Property, Plant, and Equipment') }}</td>
+      <td>
+        {% if 'B_fixed_assets_current' in assets %}{{ '(' +
+        str(abs(assets['B_fixed_assets_current'])) + ')' if
+        assets['B_fixed_assets_current'] < 0 else
+        str(assets['B_fixed_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'B_fixed_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['B_fixed_assets_previous'])) + ')' if
+        assets['B_fixed_assets_previous'] < 0 else
+        str(assets['B_fixed_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('III. Long-Term Financial Assets') }}</td>
+      <td>
+        {% if 'B_long_term_financial_assets_current' in assets %}{{ '(' +
+        str(abs(assets['B_long_term_financial_assets_current'])) + ')' if
+        assets['B_long_term_financial_assets_current'] < 0 else
+        str(assets['B_long_term_financial_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'B_long_term_financial_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['B_long_term_financial_assets_previous'])) + ')' if
+        assets['B_long_term_financial_assets_previous'] < 0 else
+        str(assets['B_long_term_financial_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('IV. Deferred Taxes') }}</td>
+      <td>
+        {% if 'B_deferred_taxes_current' in assets %}{{ '(' +
+        str(abs(assets['B_deferred_taxes_current'])) + ')' if
+        assets['B_deferred_taxes_current'] < 0 else
+        str(assets['B_deferred_taxes_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'B_deferred_taxes_previous' in assets %}{{ '(' +
+        str(abs(assets['B_deferred_taxes_previous'])) + ')' if
+        assets['B_deferred_taxes_previous'] < 0 else
+        str(assets['B_deferred_taxes_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('Total for Section B:') }}</td>
+      <td>
+        {% if 'B_total_noncurrent_assets_current' in assets %}{{ '(' +
+        str(abs(assets['B_total_noncurrent_assets_current'])) + ')' if
+        assets['B_total_noncurrent_assets_current'] < 0 else
+        str(assets['B_total_noncurrent_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'B_total_noncurrent_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['B_total_noncurrent_assets_previous'])) + ')' if
+        assets['B_total_noncurrent_assets_previous'] < 0 else
+        str(assets['B_total_noncurrent_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('C. Current (Short-Term) Assets') }}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>{{ _('I. Inventory') }}</td>
+      <td>
+        {% if 'C_inventory_current' in assets %}{{ '(' +
+        str(abs(assets['C_inventory_current'])) + ')' if
+        assets['C_inventory_current'] < 0 else
+        str(assets['C_inventory_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_inventory_previous' in assets %}{{ '(' +
+        str(abs(assets['C_inventory_previous'])) + ')' if
+        assets['C_inventory_previous'] < 0 else
+        str(assets['C_inventory_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('II. Receivables, including:') }}</td>
+      <td>
+        {% if 'C_receivables_current' in assets %}{{ '(' +
+        str(abs(assets['C_receivables_current'])) + ')' if
+        assets['C_receivables_current'] < 0 else
+        str(assets['C_receivables_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_receivables_previous' in assets %}{{ '(' +
+        str(abs(assets['C_receivables_previous'])) + ')' if
+        assets['C_receivables_previous'] < 0 else
+        str(assets['C_receivables_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('over 1 year') }}</td>
+      <td>
+        {% if 'C_receivables_over_one_year_current' in assets %}{{ '(' +
+        str(abs(assets['C_receivables_over_one_year_current'])) + ')' if
+        assets['C_receivables_over_one_year_current'] < 0 else
+        str(assets['C_receivables_over_one_year_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_receivables_over_one_year_previous' in assets %}{{ '(' +
+        str(abs(assets['C_receivables_over_one_year_previous'])) + ')' if
+        assets['C_receivables_over_one_year_previous'] < 0 else
+        str(assets['C_receivables_over_one_year_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('III. Investments') }}</td>
+      <td>
+        {% if 'C_investments_current' in assets %}{{ '(' +
+        str(abs(assets['C_investments_current'])) + ')' if
+        assets['C_investments_current'] < 0 else
+        str(assets['C_investments_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_investments_previous' in assets %}{{ '(' +
+        str(abs(assets['C_investments_previous'])) + ')' if
+        assets['C_investments_previous'] < 0 else
+        str(assets['C_investments_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('IV. Cash and Cash Equivalents') }}</td>
+      <td>
+        {% if 'C_cash_current' in assets %}{{ '(' +
+        str(abs(assets['C_cash_current'])) + ')' if assets['C_cash_current'] < 0
+        else str(assets['C_cash_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_cash_previous' in assets %}{{ '(' +
+        str(abs(assets['C_cash_previous'])) + ')' if assets['C_cash_previous'] <
+        0 else str(assets['C_cash_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('Total for Section C:') }}</td>
+      <td>
+        {% if 'C_total_current_assets_current' in assets %}{{ '(' +
+        str(abs(assets['C_total_current_assets_current'])) + ')' if
+        assets['C_total_current_assets_current'] < 0 else
+        str(assets['C_total_current_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'C_total_current_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['C_total_current_assets_previous'])) + ')' if
+        assets['C_total_current_assets_previous'] < 0 else
+        str(assets['C_total_current_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('D. Prepaid Expenses') }}</td>
+      <td>
+        {% if 'D_prepaid_expenses_current' in assets %}{{ '(' +
+        str(abs(assets['D_prepaid_expenses_current'])) + ')' if
+        assets['D_prepaid_expenses_current'] < 0 else
+        str(assets['D_prepaid_expenses_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'D_prepaid_expenses_previous' in assets %}{{ '(' +
+        str(abs(assets['D_prepaid_expenses_previous'])) + ')' if
+        assets['D_prepaid_expenses_previous'] < 0 else
+        str(assets['D_prepaid_expenses_previous']) }}{% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td>{{ _('TOTAL ASSETS (A+B+C+D)') }}</td>
+      <td>
+        {% if 'total_assets_current' in assets %}{{ '(' +
+        str(abs(assets['total_assets_current'])) + ')' if
+        assets['total_assets_current'] < 0 else
+        str(assets['total_assets_current']) }}{% endif %}
+      </td>
+      <td>
+        {% if 'total_assets_previous' in assets %}{{ '(' +
+        str(abs(assets['total_assets_previous'])) + ')' if
+        assets['total_assets_previous'] < 0 else
+        str(assets['total_assets_previous']) }}{% endif %}
+      </td>
+    </tr>
+  </tbody>
 </table>

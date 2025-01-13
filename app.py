@@ -82,6 +82,11 @@ from wrapper_functions import role_required, roles_required
 def inject_current_year():
     return {'current_year': datetime.now().year}
 
+@app.context_processor
+def utility_processor():
+    return dict(str=str)
+
+app.jinja_env.globals.update(abs=abs)
 
 ### Routes and Functions
 @app.route('/')
